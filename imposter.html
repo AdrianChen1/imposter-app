@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Imposter</title>
+  <style>
+/* ===================== RESET & ROOT ===================== */
+:root {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --surface2: #0f3460;
+  --accent: #e94560;
+  --text: #eaeaea;
+  --text-muted: #8899aa;
+  --success: #4caf50;
+  --danger: #e94560;
+  --warn: #ff9800;
+  --radius: 14px;
+  --sp: 1rem;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { display: flex; flex-direction: column; min-height: 100dvh; }
+
+#app { display: flex; flex-direction: column; min-height: 100dvh; }
+
+/* ===================== SCREEN SYSTEM ===================== */
+.screen { display: none; min-height: 100dvh; width: 100%; animation: fadeIn 0.2s ease; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+.screen-inner {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.25rem var(--sp);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex: 1;
+}
+
+.screen-center { align-items: center; justify-content: center; text-align: center; gap: 1.5rem; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===================== TOP BAR ===================== */
+.screen-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+}
+
+.exit-game-btn {
+  background: none;
+  border: 1px solid rgba(233,69,96,0.3);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: var(--font);
+  cursor: pointer;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.exit-game-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(233,69,96,0.08); }
+
+.peek-exit {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+}
+
+/* ===================== BUTTONS ===================== */
+.btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; padding: 0.9rem 1.25rem; border: none; border-radius: 999px;
+  font-family: var(--font); font-size: 1rem; font-weight: 600; cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s, background 0.15s;
+  min-height: 54px; gap: 0.1rem;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:not(:disabled):hover { background: #d63451; }
+
+.btn-secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+.btn-secondary:not(:disabled):hover { background: rgba(233,69,96,0.1); }
+
+.btn-ghost {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--surface2); font-size: 0.9rem; min-height: 46px;
+}
+.btn-ghost:not(:disabled):hover { background: var(--surface); color: var(--text); }
+
+.btn-small {
+  width: auto; padding: 0.55rem 1rem; font-size: 0.9rem; flex-shrink: 0;
+  background: var(--accent); color: #fff; border-radius: 999px; border: none;
+  font-weight: 600; cursor: pointer; min-height: 44px; font-family: var(--font);
+  transition: opacity 0.15s;
+}
+.btn-small:active { opacity: 0.8; }
+
+.btn-icon { font-size: 1.4rem; margin-bottom: 0.1rem; }
+.btn-sub { font-size: 0.75rem; font-weight: 400; opacity: 0.8; }
+
+.btn-copy {
+  background: var(--surface2); color: var(--text); border: none;
+  border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.85rem; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-copy:hover { background: #1a4a80; }
+
+.back-btn {
+  background: none; border: none; color: var(--text-muted); font-size: 0.9rem;
+  cursor: pointer; padding: 0.25rem 0; text-align: left; width: fit-content; font-family: var(--font);
+}
+.back-btn:hover { color: var(--text); }
+
+/* ===================== INPUTS ===================== */
+input[type="text"] {
+  width: 100%; padding: 0.8rem 1rem; background: var(--surface);
+  border: 2px solid var(--surface2); border-radius: var(--radius);
+  color: var(--text); font-size: 1rem; font-family: var(--font);
+  outline: none; transition: border-color 0.15s; min-height: 48px;
+}
+input[type="text"]:focus { border-color: var(--accent); }
+input[type="text"]::placeholder { color: var(--text-muted); }
+
+.input-row { display: flex; gap: 0.5rem; align-items: center; }
+.input-row input { flex: 1; }
+
+/* ===================== HOME ===================== */
+.logo { text-align: center; padding: 1.5rem 0 0.75rem; }
+.logo-icon {
+  width: 70px; height: 70px; background: var(--accent); border-radius: 50%;
+  font-size: 2.2rem; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 0.9rem; font-weight: 900; color: #fff;
+  box-shadow: 0 0 32px rgba(233,69,96,0.4);
+}
+.logo h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; }
+.tagline { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem; }
+
+.mode-buttons { display: flex; flex-direction: column; gap: 0.65rem; margin: 1rem 0; }
+
+.rules-link { text-align: center; color: var(--text-muted); font-size: 0.875rem; cursor: pointer; padding: 0.4rem; }
+.rules-link:hover { color: var(--text); }
+
+.rules-box {
+  background: var(--surface); border-radius: var(--radius); padding: 1rem;
+  font-size: 0.875rem; line-height: 1.65; color: var(--text-muted);
+}
+.rules-box strong { color: var(--text); }
+.rules-box p + p { margin-top: 0.65rem; }
+
+/* ===================== PLAYER CHIPS ===================== */
+.player-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; min-height: 36px; }
+.player-chip {
+  background: var(--surface); border: 1px solid var(--surface2); border-radius: 999px;
+  padding: 0.3rem 0.85rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.45rem;
+}
+.chip-remove { color: var(--text-muted); cursor: pointer; font-size: 0.75rem; }
+.chip-remove:hover { color: var(--danger); }
+
+/* ===================== PLAYER LIST (lobby) ===================== */
+.player-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.player-row {
+  background: var(--surface); border-radius: var(--radius); padding: 0.7rem 1rem;
+  display: flex; align-items: center; gap: 0.7rem; font-size: 0.95rem;
+}
+.player-avatar {
+  width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; color: #fff;
+}
+.player-name { flex: 1; font-weight: 600; }
+.player-badge {
+  font-size: 0.72rem; color: var(--text-muted); background: var(--surface2);
+  border-radius: 999px; padding: 0.18rem 0.55rem;
+}
+
+/* ===================== ROOM CODE ===================== */
+.room-code-box {
+  background: var(--surface); border-radius: var(--radius); padding: 0.9rem 1.1rem;
+  display: flex; align-items: center; gap: 0.65rem;
+}
+.room-code-label { font-size: 0.78rem; color: var(--text-muted); flex-shrink: 0; }
+.room-code { font-size: 1.5rem; font-weight: 800; letter-spacing: 0.2em; color: var(--accent); flex: 1; text-align: center; }
+
+/* ===================== CATEGORY TAG ===================== */
+.category-tag {
+  background: linear-gradient(90deg, var(--surface2), rgba(15,52,96,0.5));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  width: fit-content;
+  align-self: center;
+}
+.category-tag::before { content: "Category: "; color: rgba(136,153,170,0.7); }
+
+/* ===================== PEEK SCREEN ===================== */
+.peek-cover {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; padding: var(--sp);
+}
+.peek-cover-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 1.2rem;
+  max-width: 360px; width: 100%; text-align: center;
+}
+.peek-avatar {
+  width: 76px; height: 76px; border-radius: 50%; font-size: 1.9rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #fff;
+}
+.peek-reveal {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 3.5rem var(--sp) 2rem; width: 100%; position: relative;
+  animation: scaleIn 0.25s ease;
+}
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.93); } to { opacity: 1; transform: scale(1); } }
+
+.role-card {
+  width: 100%; max-width: 340px; border-radius: 20px; padding: 1.75rem 1.5rem;
+  text-align: center; display: flex; flex-direction: column; gap: 0.6rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); margin-top: 0.75rem;
+}
+.role-card.word-card  { background: linear-gradient(135deg, #1a5c35, #2d8a55); border: 2px solid #4caf50; }
+.role-card.imposter-card { background: linear-gradient(135deg, #5c1a1a, #8a2d2d); border: 2px solid var(--danger); }
+
+.role-label { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+.role-value { font-size: 2rem; font-weight: 800; line-height: 1.2; }
+.role-sub { font-size: 0.85rem; opacity: 0.7; }
+
+/* ===================== CLUE SCREEN ===================== */
+.phase-badge {
+  background: var(--surface2); color: var(--text); border-radius: 999px;
+  padding: 0.28rem 0.8rem; font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.word-box {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 0.9rem 1.1rem; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;
+}
+.word-box strong { color: var(--text); font-size: 1.05rem; }
+
+.clue-previous { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; overflow-y: auto; }
+.clue-item {
+  background: var(--surface); border-radius: 10px; padding: 0.55rem 0.85rem;
+  font-size: 0.875rem; display: flex; justify-content: space-between; align-items: center;
+}
+.clue-item .clue-name { color: var(--text-muted); font-size: 0.78rem; }
+.clue-item .clue-word { font-weight: 600; color: var(--text); }
+
+.turn-msg { color: var(--text-muted); font-size: 0.9rem; }
+
+/* ===================== DISCUSSION ===================== */
+.clue-list { display: flex; flex-direction: column; gap: 0.45rem; flex: 1; overflow-y: auto; }
+
+/* ===================== VOTING ===================== */
+.vote-list { display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
+.vote-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.vote-item {
+  background: var(--surface); border: 2px solid transparent; border-radius: var(--radius);
+  padding: 0.8rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.7rem;
+  transition: border-color 0.15s, background 0.15s; min-height: 56px;
+}
+.vote-item:hover:not(.disabled) { background: var(--surface2); }
+.vote-item.selected { border-color: var(--accent); background: rgba(233,69,96,0.12); }
+.vote-item.disabled { opacity: 0.35; cursor: not-allowed; }
+.vote-item-name { font-weight: 600; flex: 1; }
+.vote-item-check { font-size: 1.1rem; color: var(--accent); }
+
+/* ===================== TIMER ===================== */
+.timer-wrap { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
+.timer-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: 999px; overflow: hidden; }
+.timer-fill {
+  height: 100%; background: var(--accent); border-radius: 999px;
+  transition: width 1s linear, background 0.5s; width: 100%;
+}
+.timer-fill.urgent { background: var(--warn); }
+.timer-fill.critical { background: var(--danger); animation: pulse 0.5s ease infinite alternate; }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
+.timer-text { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); min-width: 28px; text-align: right; }
+
+/* ===================== REVEAL ===================== */
+.result-banner {
+  border-radius: var(--radius); padding: 0.9rem 1.25rem; text-align: center;
+  font-size: 1.1rem; font-weight: 700;
+}
+.result-banner.caught { background: rgba(76,175,80,0.18); color: var(--success); border: 1px solid var(--success); }
+.result-banner.escaped { background: rgba(233,69,96,0.18); color: var(--danger); border: 1px solid var(--danger); }
+
+.reveal-section {
+  background: var(--surface); border-radius: var(--radius); padding: 0.9rem 1.1rem; text-align: center;
+}
+.reveal-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+.reveal-big { font-size: 1.65rem; font-weight: 800; color: var(--text); }
+.reveal-category-name { font-size: 1.1rem; font-weight: 700; color: var(--text-muted); }
+.reveal-word { color: var(--accent); }
+.reveal-hint { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.3rem; font-style: italic; }
+
+.reveal-section-label {
+  font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 0.5rem; font-weight: 700;
+}
+
+.vote-tally {
+  background: var(--surface); border-radius: var(--radius); padding: 0.75rem 1rem;
+  display: flex; flex-direction: column; gap: 0.35rem;
+}
+.tally-row { display: flex; justify-content: space-between; font-size: 0.875rem; }
+.tally-name { flex: 1; }
+.tally-votes { color: var(--text-muted); font-weight: 600; }
+.tally-row.is-imposter .tally-name { color: var(--accent); font-weight: 700; }
+
+.score-list {
+  background: var(--surface); border-radius: var(--radius); padding: 0.75rem 1rem;
+  display: flex; flex-direction: column; gap: 0.35rem;
+}
+.score-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; padding: 0.2rem 0; }
+.score-row.gained .score-name { color: var(--success); }
+.score-name { flex: 1; font-weight: 600; }
+.score-delta { font-size: 0.78rem; color: var(--success); font-weight: 700; }
+.score-total { font-weight: 800; color: var(--accent); min-width: 36px; text-align: right; }
+
+.reveal-actions { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.25rem; }
+
+/* ===================== MISC ===================== */
+.error-msg { color: var(--danger); font-size: 0.85rem; min-height: 1.1em; }
+.hint-text { color: var(--text-muted); font-size: 0.875rem; text-align: center; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+
+.waiting-msg {
+  display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
+  color: var(--text-muted); font-size: 0.9rem; padding: 1.25rem;
+}
+.spinner {
+  width: 26px; height: 26px; border: 3px solid var(--surface2); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+.spinner-large { width: 52px; height: 52px; border-width: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-icon { font-size: 3rem; }
+
+@media (min-width: 600px) { .screen-inner { max-width: 520px; } }
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- HOME -->
+    <div class="screen" id="screen-home">
+      <div class="screen-inner">
+        <div class="logo">
+          <div class="logo-icon">?</div>
+          <h1>Imposter</h1>
+          <p class="tagline">A social deduction party game</p>
+        </div>
+        <div class="mode-buttons">
+          <button class="btn btn-primary" onclick="startPassDevice()">
+            <span class="btn-icon">📱</span>
+            Pass-Device Mode
+            <span class="btn-sub">Everyone shares one device</span>
+          </button>
+          <button class="btn btn-secondary" onclick="showScreen('screen-setup-host')">
+            <span class="btn-icon">🌐</span>
+            Create Multiplayer Room
+            <span class="btn-sub">Host a game on multiple devices</span>
+          </button>
+          <button class="btn btn-secondary" onclick="showScreen('screen-setup-join')">
+            <span class="btn-icon">🔗</span>
+            Join Multiplayer Room
+            <span class="btn-sub">Enter a room code to join</span>
+          </button>
+        </div>
+        <div class="rules-link" onclick="toggleRules()">How to play ▾</div>
+        <div class="rules-box" id="rules-box" style="display:none">
+          <p>Everyone sees the <strong>category</strong>. The crew also sees the <strong>secret word</strong>; the Imposter only gets a <strong>vague hint</strong>.</p>
+          <p>Take turns giving one-word clues. Then discuss and vote on who you think is the Imposter.</p>
+          <p><strong>Crew wins</strong> if the Imposter is voted out.<br>
+          <strong>Imposter wins</strong> if they survive the vote.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP: PASS-DEVICE -->
+    <div class="screen" id="screen-setup-pass">
+      <div class="screen-inner">
+        <button class="back-btn" onclick="showScreen('screen-home')">← Back</button>
+        <h2>Pass-Device Setup</h2>
+        <p class="hint-text">Add at least 3 players to start</p>
+        <div class="input-row">
+          <input type="text" id="pass-name-input" placeholder="Player name" maxlength="20" autocomplete="off">
+          <button class="btn btn-small" onclick="addPassPlayer()">Add</button>
+        </div>
+        <div id="pass-player-chips" class="player-chips"></div>
+        <div id="pass-error" class="error-msg"></div>
+        <button class="btn btn-primary" id="pass-start-btn" onclick="startPassGame()" style="margin-top:1.5rem" disabled>
+          Start Game
+        </button>
+      </div>
+    </div>
+
+    <!-- SETUP: HOST -->
+    <div class="screen" id="screen-setup-host">
+      <div class="screen-inner">
+        <button class="back-btn" onclick="showScreen('screen-home')">← Back</button>
+        <h2>Create Room</h2>
+        <input type="text" id="host-name-input" placeholder="Your name" maxlength="20" autocomplete="off">
+        <div id="host-error" class="error-msg"></div>
+        <button class="btn btn-primary" onclick="hostCreateRoom()" style="margin-top:1rem">
+          Create Room
+        </button>
+      </div>
+    </div>
+
+    <!-- SETUP: JOIN -->
+    <div class="screen" id="screen-setup-join">
+      <div class="screen-inner">
+        <button class="back-btn" onclick="showScreen('screen-home')">← Back</button>
+        <h2>Join Room</h2>
+        <input type="text" id="join-name-input" placeholder="Your name" maxlength="20" autocomplete="off">
+        <input type="text" id="join-code-input" placeholder="Room code (e.g. AB3X7Q)" maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.15em">
+        <div id="join-error" class="error-msg"></div>
+        <button class="btn btn-primary" onclick="joinerJoinRoom()" style="margin-top:1rem">
+          Join Room
+        </button>
+      </div>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="screen" id="screen-lobby">
+      <div class="screen-inner">
+        <div class="screen-top-bar">
+          <h2>Waiting Room</h2>
+          <button class="exit-game-btn" onclick="confirmExit()">✕ Exit</button>
+        </div>
+        <div class="room-code-box">
+          <span class="room-code-label">Room Code</span>
+          <span class="room-code" id="lobby-room-code">------</span>
+          <button class="btn-copy" onclick="copyRoomCode()">Copy</button>
+        </div>
+        <div id="lobby-player-list" class="player-list"></div>
+        <div id="lobby-status" class="hint-text">Waiting for players...</div>
+        <div id="lobby-error" class="error-msg"></div>
+        <button class="btn btn-primary" id="lobby-start-btn" onclick="hostStartGame()" style="display:none">
+          Start Game
+        </button>
+        <p id="lobby-wait-msg" class="hint-text" style="display:none">Waiting for host to start...</p>
+      </div>
+    </div>
+
+    <!-- PEEK -->
+    <div class="screen" id="screen-peek">
+      <div class="screen-inner" style="padding:0">
+        <div id="peek-cover" class="peek-cover">
+          <button class="exit-game-btn peek-exit" onclick="confirmExit()">✕ Exit</button>
+          <div class="peek-cover-inner">
+            <div class="peek-avatar" id="peek-avatar"></div>
+            <h2 id="peek-cover-name"></h2>
+            <p>Tap when no one else is looking</p>
+            <button class="btn btn-primary" onclick="peekReveal()" style="max-width:280px">I'm ready to look 👁</button>
+          </div>
+        </div>
+        <div id="peek-reveal" class="peek-reveal" style="display:none">
+          <button class="exit-game-btn peek-exit" onclick="confirmExit()">✕ Exit</button>
+          <div id="peek-category-tag" class="category-tag"></div>
+          <div id="peek-role-card" class="role-card">
+            <div id="peek-role-label" class="role-label"></div>
+            <div id="peek-role-value" class="role-value"></div>
+            <div id="peek-role-sub" class="role-sub"></div>
+          </div>
+          <button class="btn btn-primary" id="peek-done-btn" onclick="peekDone()" style="max-width:320px;margin-top:1.5rem">
+            Done — pass device ➜
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLUE -->
+    <div class="screen" id="screen-clue">
+      <div class="screen-inner">
+        <div class="screen-top-bar">
+          <div class="phase-badge">Clue Phase</div>
+          <button class="exit-game-btn" onclick="confirmExit()">✕ Exit</button>
+        </div>
+        <div id="clue-category-tag" class="category-tag"></div>
+        <div id="clue-word-box" class="word-box"></div>
+        <div id="clue-previous" class="clue-previous"></div>
+        <div id="clue-input-area">
+          <p id="clue-turn-msg" class="turn-msg"></p>
+          <div class="input-row">
+            <input type="text" id="clue-input" placeholder="Your clue..." maxlength="30" autocomplete="off">
+            <button class="btn btn-small" id="clue-submit-btn" onclick="submitClue()">Submit</button>
+          </div>
+          <div id="clue-error" class="error-msg"></div>
+        </div>
+        <div id="clue-waiting" class="waiting-msg" style="display:none">
+          <div class="spinner"></div>
+          Waiting for other players...
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCUSSION -->
+    <div class="screen" id="screen-discussion">
+      <div class="screen-inner">
+        <div class="screen-top-bar">
+          <div class="phase-badge">Discussion</div>
+          <button class="exit-game-btn" onclick="confirmExit()">✕ Exit</button>
+        </div>
+        <div class="timer-wrap" style="margin-bottom:0.5rem">
+          <div class="timer-bar"><div id="disc-timer-bar" class="timer-fill"></div></div>
+          <span id="disc-timer-text" class="timer-text"></span>
+        </div>
+        <p class="hint-text">Who is the Imposter? Discuss the clues below.</p>
+        <div id="discussion-clues" class="clue-list"></div>
+        <button class="btn btn-primary" id="disc-vote-btn" onclick="goToVoting()">
+          Start Voting
+        </button>
+      </div>
+    </div>
+
+    <!-- VOTING -->
+    <div class="screen" id="screen-voting">
+      <div class="screen-inner">
+        <div class="screen-top-bar">
+          <div class="phase-badge">Vote</div>
+          <button class="exit-game-btn" onclick="confirmExit()">✕ Exit</button>
+        </div>
+        <p id="voting-prompt" class="turn-msg"></p>
+        <div id="voting-player-list" class="vote-list"></div>
+        <div class="vote-actions">
+          <button class="btn btn-primary" id="voting-confirm-btn" onclick="confirmVote()" disabled>
+            Confirm Vote
+          </button>
+          <button class="btn btn-ghost" id="voting-skip-btn" onclick="skipVote()">
+            Skip (no vote)
+          </button>
+        </div>
+        <div id="voting-waiting" class="waiting-msg" style="display:none">
+          <div class="spinner"></div>
+          Waiting for all votes...
+          <span id="voting-count"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVEAL -->
+    <div class="screen" id="screen-reveal">
+      <div class="screen-inner">
+        <div class="screen-top-bar">
+          <div></div>
+          <button class="exit-game-btn" onclick="confirmExit()">✕ Exit</button>
+        </div>
+        <div id="reveal-result-banner" class="result-banner"></div>
+        <div class="reveal-section">
+          <div class="reveal-label">Category</div>
+          <div id="reveal-category" class="reveal-category-name"></div>
+        </div>
+        <div class="reveal-section">
+          <div class="reveal-label">The Imposter was</div>
+          <div id="reveal-imposter-name" class="reveal-big"></div>
+        </div>
+        <div class="reveal-section">
+          <div class="reveal-label">The secret word was</div>
+          <div id="reveal-word" class="reveal-big reveal-word"></div>
+          <div id="reveal-hint" class="reveal-hint"></div>
+        </div>
+        <div id="reveal-vote-tally" class="vote-tally"></div>
+        <div id="reveal-scores" class="score-list"></div>
+        <div class="reveal-actions">
+          <button class="btn btn-primary" id="reveal-next-btn" onclick="playAgain()">Next Round</button>
+          <button class="btn btn-secondary" onclick="endGame()">End Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTING -->
+    <div class="screen" id="screen-connecting">
+      <div class="screen-inner screen-center">
+        <div class="spinner spinner-large"></div>
+        <p id="connecting-msg">Connecting...</p>
+        <button class="btn btn-ghost" onclick="confirmExit()" style="margin-top:1rem;max-width:200px">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="screen" id="screen-error">
+      <div class="screen-inner screen-center">
+        <div class="error-icon">⚠️</div>
+        <p id="error-msg-text"></p>
+        <button class="btn btn-secondary" onclick="showScreen('screen-home')">Back to Home</button>
+      </div>
+    </div>
+
+  </div>
+  <script>
+// === game-core.js ===
+/* ===================== WORD CATEGORIES ===================== */
+const WORD_CATEGORIES = {
+
+  "Animals": [
+    { word: "Flamingo",        hint: "colony" },
+    { word: "Elephant",        hint: "memory" },
+    { word: "Octopus",         hint: "arms" },
+    { word: "Penguin",         hint: "tuxedo" },
+    { word: "Chameleon",       hint: "color" },
+    { word: "Platypus",        hint: "venomous" },
+    { word: "Hummingbird",     hint: "hover" },
+    { word: "Narwhal",         hint: "tusk" },
+    { word: "Sloth",           hint: "slow" },
+    { word: "Cheetah",         hint: "speed" },
+    { word: "Dolphin",         hint: "sonar" },
+    { word: "Gorilla",         hint: "knuckles" },
+    { word: "Peacock",         hint: "display" },
+    { word: "Piranha",         hint: "frenzy" },
+    { word: "Komodo dragon",   hint: "ambush" },
+    { word: "Firefly",         hint: "glow" },
+    { word: "Toucan",          hint: "bill" },
+    { word: "Wolverine",       hint: "fierce" },
+    { word: "Capybara",        hint: "social" },
+    { word: "Arctic fox",      hint: "white" },
+    { word: "Tarantula",       hint: "silk" },
+    { word: "Manatee",         hint: "gentle" },
+    { word: "Otter",           hint: "float" },
+    { word: "Meerkat",         hint: "lookout" },
+    { word: "Porcupine",       hint: "quills" },
+    { word: "Snow leopard",    hint: "elusive" },
+    { word: "Electric eel",    hint: "shock" },
+    { word: "Tardigrade",      hint: "survive" },
+    { word: "Pangolin",        hint: "scales" },
+    { word: "Vampire bat",     hint: "blood" },
+    { word: "Lyrebird",        hint: "mimic" },
+    { word: "Horseshoe crab",  hint: "ancient" },
+    { word: "Wombat",          hint: "burrow" },
+    { word: "Mandrill",        hint: "colorful" },
+    { word: "Kiwi",            hint: "nocturnal" },
+    { word: "Fennec fox",      hint: "ears" },
+    { word: "Blobfish",        hint: "deep" },
+    { word: "Lion",            hint: "pride" },
+    { word: "Tiger",           hint: "stripes" },
+    { word: "Shark",           hint: "fin" },
+    { word: "Eagle",           hint: "soar" },
+    { word: "Giraffe",         hint: "neck" },
+    { word: "Crocodile",       hint: "armored" },
+    { word: "Kangaroo",        hint: "pouch" },
+    { word: "Wolf",            hint: "howl" },
+    { word: "Parrot",          hint: "words" },
+    { word: "Hedgehog",        hint: "curl" },
+    { word: "Bat",             hint: "echo" },
+    { word: "Seal",            hint: "bark" },
+    { word: "Axolotl",         hint: "regrow" },
+  ],
+
+  "Food": [
+    { word: "Sushi",           hint: "raw" },
+    { word: "Croissant",       hint: "flaky" },
+    { word: "Paella",          hint: "saffron" },
+    { word: "Tacos",           hint: "street" },
+    { word: "Ramen",           hint: "broth" },
+    { word: "Fondue",          hint: "melted" },
+    { word: "Truffle",         hint: "earthy" },
+    { word: "Soufflé",         hint: "fragile" },
+    { word: "Dim sum",         hint: "steamed" },
+    { word: "Baklava",         hint: "honey" },
+    { word: "Kimchi",          hint: "fermented" },
+    { word: "Foie gras",       hint: "liver" },
+    { word: "Pho",             hint: "fragrant" },
+    { word: "Goulash",         hint: "paprika" },
+    { word: "Ceviche",         hint: "citrus" },
+    { word: "Pretzels",        hint: "twist" },
+    { word: "Nachos",          hint: "chips" },
+    { word: "Haggis",          hint: "organ" },
+    { word: "Mochi",           hint: "chewy" },
+    { word: "Tiramisu",        hint: "layers" },
+    { word: "Falafel",         hint: "crispy" },
+    { word: "Pierogi",         hint: "dough" },
+    { word: "Borscht",         hint: "beet" },
+    { word: "Tom yum",         hint: "spicy" },
+    { word: "Churros",         hint: "fried" },
+    { word: "Caviar",          hint: "luxury" },
+    { word: "Gyros",           hint: "spit" },
+    { word: "Poutine",         hint: "gravy" },
+    { word: "Shakshuka",       hint: "eggs" },
+    { word: "Miso soup",       hint: "umami" },
+    { word: "Empanadas",       hint: "stuffed" },
+    { word: "Yakitori",        hint: "skewer" },
+    { word: "Peking duck",     hint: "lacquered" },
+    { word: "Gnocchi",         hint: "fluffy" },
+    { word: "Tagine",          hint: "clay" },
+    { word: "Bibimbap",        hint: "mixed" },
+    { word: "Stroopwafel",     hint: "syrup" },
+    { word: "Mole",            hint: "chocolate" },
+    { word: "Escargot",        hint: "shell" },
+    { word: "Shawarma",        hint: "wrapped" },
+    { word: "Beef Wellington",  hint: "pastry" },
+    { word: "Crème brûlée",    hint: "torch" },
+    { word: "Jambalaya",       hint: "spiced" },
+    { word: "Fugu",            hint: "deadly" },
+    { word: "Gelato",          hint: "dense" },
+    { word: "Brioche",         hint: "buttery" },
+    { word: "Matzo",           hint: "unleavened" },
+    { word: "Crepes",          hint: "thin" },
+    { word: "Dumplings",       hint: "folded" },
+    { word: "Lobster",         hint: "expensive" },
+    { word: "Risotto",         hint: "creamy" },
+  ],
+
+  "Objects": [
+    { word: "Compass",         hint: "north" },
+    { word: "Magnifying glass", hint: "zoom" },
+    { word: "Harmonica",       hint: "breath" },
+    { word: "Hourglass",       hint: "sand" },
+    { word: "Binoculars",      hint: "distance" },
+    { word: "Telescope",       hint: "stars" },
+    { word: "Lava lamp",       hint: "wax" },
+    { word: "Music box",       hint: "crank" },
+    { word: "Globe",           hint: "spin" },
+    { word: "Accordion",       hint: "squeeze" },
+    { word: "Anchor",          hint: "hold" },
+    { word: "Xylophone",       hint: "mallet" },
+    { word: "Lantern",         hint: "wick" },
+    { word: "Stopwatch",       hint: "lap" },
+    { word: "Mortar and pestle", hint: "grind" },
+    { word: "Pendulum",        hint: "swing" },
+    { word: "Abacus",          hint: "beads" },
+    { word: "Periscope",       hint: "mirror" },
+    { word: "Sundial",         hint: "shadow" },
+    { word: "Gyroscope",       hint: "balance" },
+    { word: "Monocle",         hint: "lens" },
+    { word: "Quill",           hint: "feather" },
+    { word: "Trebuchet",       hint: "siege" },
+    { word: "Marionette",      hint: "strings" },
+    { word: "Didgeridoo",      hint: "drone" },
+    { word: "Camera",          hint: "capture" },
+    { word: "Spirograph",      hint: "gears" },
+    { word: "Megaphone",       hint: "cone" },
+    { word: "Kaleidoscope",    hint: "symmetry" },
+    { word: "Metronome",       hint: "tempo" },
+    { word: "Glockenspiel",    hint: "bells" },
+    { word: "Map",             hint: "fold" },
+    { word: "Cuckoo clock",    hint: "bird" },
+    { word: "Turntable",       hint: "vinyl" },
+    { word: "Scythe",          hint: "harvest" },
+    { word: "Flashlight",      hint: "beam" },
+    { word: "Trophy",          hint: "victory" },
+    { word: "Cipher wheel",    hint: "code" },
+    { word: "Typewriter",      hint: "click" },
+    { word: "Slingshot",       hint: "elastic" },
+    { word: "Weathervane",     hint: "wind" },
+    { word: "Mirror",          hint: "reflect" },
+    { word: "Whistle",         hint: "signal" },
+    { word: "Bugle",           hint: "call" },
+    { word: "Canteen",         hint: "flask" },
+    { word: "Boomerang",       hint: "return" },
+    { word: "Thermometer",     hint: "mercury" },
+    { word: "Microscope",      hint: "tiny" },
+    { word: "Ruler",           hint: "measure" },
+    { word: "Piggy bank",      hint: "save" },
+  ],
+
+  "Locations": [
+    { word: "Machu Picchu",       hint: "clouds" },
+    { word: "Dead Sea",           hint: "float" },
+    { word: "Colosseum",          hint: "spectacle" },
+    { word: "Angkor Wat",         hint: "jungle" },
+    { word: "Santorini",          hint: "caldera" },
+    { word: "Stonehenge",         hint: "solstice" },
+    { word: "Great Barrier Reef", hint: "coral" },
+    { word: "Sahara Desert",      hint: "dunes" },
+    { word: "Amazon rainforest",  hint: "canopy" },
+    { word: "Grand Canyon",       hint: "layers" },
+    { word: "Mount Fuji",         hint: "pilgrimage" },
+    { word: "Niagara Falls",      hint: "barrel" },
+    { word: "Chernobyl",          hint: "exclusion" },
+    { word: "Easter Island",      hint: "statues" },
+    { word: "Pompeii",            hint: "ash" },
+    { word: "Bermuda Triangle",   hint: "disappear" },
+    { word: "Mariana Trench",     hint: "depth" },
+    { word: "Forbidden City",     hint: "imperial" },
+    { word: "Petra",              hint: "carved" },
+    { word: "Galápagos Islands",  hint: "evolution" },
+    { word: "Ayers Rock",         hint: "sacred" },
+    { word: "Catacombs of Paris", hint: "bones" },
+    { word: "Area 51",            hint: "secret" },
+    { word: "Mount Everest",      hint: "summit" },
+    { word: "Atacama Desert",     hint: "driest" },
+    { word: "Maldives",           hint: "sinking" },
+    { word: "Lascaux Cave",       hint: "ancient" },
+    { word: "Chichen Itza",       hint: "serpent" },
+    { word: "Venice",             hint: "canals" },
+    { word: "Cappadocia",         hint: "balloons" },
+    { word: "Yellowstone",        hint: "geyser" },
+    { word: "Antarctica",         hint: "frozen" },
+    { word: "Salar de Uyuni",     hint: "mirror" },
+    { word: "Pamukkale",          hint: "white" },
+    { word: "Alcatraz",           hint: "prison" },
+    { word: "Varanasi",           hint: "sacred" },
+    { word: "Taj Mahal",          hint: "love" },
+    { word: "Versailles",         hint: "palace" },
+    { word: "Statue of Liberty",  hint: "torch" },
+    { word: "Lake Baikal",        hint: "deep" },
+    { word: "Valley of Kings",    hint: "tombs" },
+    { word: "Big Ben",            hint: "chime" },
+    { word: "Mount Olympus",      hint: "gods" },
+    { word: "Iguazu Falls",       hint: "mist" },
+    { word: "Eiffel Tower",       hint: "iron" },
+    { word: "Pyramids of Giza",   hint: "pharaoh" },
+    { word: "Sydney Opera House", hint: "sails" },
+    { word: "Mount Kilimanjaro",  hint: "glacier" },
+    { word: "Great Wall of China", hint: "defense" },
+    { word: "Hollywood Sign",     hint: "fame" },
+  ],
+
+  "Sports": [
+    { word: "Curling",            hint: "sweep" },
+    { word: "Fencing",            hint: "touch" },
+    { word: "Polo",               hint: "mallet" },
+    { word: "Sumo wrestling",     hint: "ring" },
+    { word: "Skeleton",           hint: "headfirst" },
+    { word: "Volleyball",         hint: "spike" },
+    { word: "Biathlon",           hint: "aim" },
+    { word: "Marathon",           hint: "mile" },
+    { word: "Parkour",            hint: "flow" },
+    { word: "Synchronized swimming", hint: "sync" },
+    { word: "Cricket",            hint: "wicket" },
+    { word: "Lacrosse",           hint: "net" },
+    { word: "Rugby",              hint: "tackle" },
+    { word: "Snooker",            hint: "pocket" },
+    { word: "Pentathlon",         hint: "five" },
+    { word: "Weightlifting",      hint: "clean" },
+    { word: "Archery",            hint: "bullseye" },
+    { word: "Bobsled",            hint: "push" },
+    { word: "Sailing",            hint: "wind" },
+    { word: "Handball",           hint: "goal" },
+    { word: "Equestrian",         hint: "dressage" },
+    { word: "Table tennis",       hint: "spin" },
+    { word: "Taekwondo",          hint: "kick" },
+    { word: "Surfing",            hint: "wave" },
+    { word: "Rock climbing",      hint: "hold" },
+    { word: "Judo",               hint: "throw" },
+    { word: "Darts",              hint: "bull" },
+    { word: "Croquet",            hint: "hoop" },
+    { word: "Water polo",         hint: "pool" },
+    { word: "Luge",               hint: "speed" },
+    { word: "Nordic skiing",      hint: "poles" },
+    { word: "Discus",             hint: "release" },
+    { word: "Triathlon",          hint: "endurance" },
+    { word: "Bocce ball",         hint: "target" },
+    { word: "Orienteering",       hint: "map" },
+    { word: "Rowing",             hint: "oar" },
+    { word: "Gymnastics",         hint: "tumble" },
+    { word: "Slalom",             hint: "gate" },
+    { word: "Horseshoes",         hint: "toss" },
+    { word: "Badminton",          hint: "shuttlecock" },
+    { word: "Squash",             hint: "wall" },
+    { word: "Field hockey",       hint: "turf" },
+    { word: "Javelin",            hint: "spear" },
+    { word: "Wrestling",          hint: "pin" },
+    { word: "Kendo",              hint: "bamboo" },
+    { word: "Capoeira",           hint: "dance" },
+    { word: "Boxing",             hint: "gloves" },
+    { word: "Swimming",           hint: "stroke" },
+    { word: "Soccer",             hint: "offside" },
+    { word: "Skateboarding",      hint: "grind" },
+  ],
+
+  "Hobbies & Activities": [
+    { word: "Beekeeping",         hint: "hive" },
+    { word: "Woodturning",        hint: "lathe" },
+    { word: "Macramé",            hint: "knots" },
+    { word: "Fermentation",       hint: "culture" },
+    { word: "Taxidermy",          hint: "stuffed" },
+    { word: "Lock picking",       hint: "picks" },
+    { word: "Foraging",           hint: "wild" },
+    { word: "Glassblowing",       hint: "molten" },
+    { word: "Bookbinding",        hint: "binding" },
+    { word: "Falconry",           hint: "hood" },
+    { word: "Mycology",           hint: "spores" },
+    { word: "Soap making",        hint: "lather" },
+    { word: "Leatherworking",     hint: "stitch" },
+    { word: "Calligraphy",        hint: "ink" },
+    { word: "Origami",            hint: "fold" },
+    { word: "Candle making",      hint: "wax" },
+    { word: "Homebrewing",        hint: "yeast" },
+    { word: "Terrarium building", hint: "miniature" },
+    { word: "Whittling",          hint: "carve" },
+    { word: "Astronomy",          hint: "observe" },
+    { word: "Metal detecting",    hint: "buried" },
+    { word: "Bonsai",             hint: "trim" },
+    { word: "Mosaic tiling",      hint: "tile" },
+    { word: "Geocaching",         hint: "hidden" },
+    { word: "Needlepoint",        hint: "needle" },
+    { word: "Fly fishing",        hint: "cast" },
+    { word: "Resin casting",      hint: "mold" },
+    { word: "Stamp collecting",   hint: "postmark" },
+    { word: "Urban sketching",    hint: "sketch" },
+    { word: "Kite flying",        hint: "string" },
+    { word: "Embroidery",         hint: "hoop" },
+    { word: "Weaving",            hint: "loom" },
+    { word: "Pottery",            hint: "wheel" },
+    { word: "Model railroading",  hint: "scale" },
+    { word: "Ice sculpting",      hint: "melt" },
+    { word: "Caving",             hint: "cave" },
+    { word: "Aquarium keeping",   hint: "tank" },
+    { word: "Pyrography",         hint: "burn" },
+    { word: "Decoupage",          hint: "paste" },
+    { word: "Genealogy",          hint: "ancestry" },
+    { word: "Cosplay",            hint: "costume" },
+    { word: "Urban gardening",    hint: "rooftop" },
+    { word: "Lego building",      hint: "brick" },
+    { word: "Knife sharpening",   hint: "edge" },
+    { word: "Puzzle building",    hint: "pieces" },
+    { word: "Journaling",         hint: "diary" },
+    { word: "Storm chasing",      hint: "tornado" },
+    { word: "Knitting",           hint: "yarn" },
+    { word: "Scrapbooking",       hint: "memories" },
+    { word: "Woodcarving",        hint: "chisel" },
+  ],
+
+  "Games": [
+    { word: "Chess",              hint: "sacrifice" },
+    { word: "Dungeons & Dragons", hint: "dungeon" },
+    { word: "Settlers of Catan",  hint: "robber" },
+    { word: "Poker",              hint: "bluff" },
+    { word: "Mahjong",            hint: "tiles" },
+    { word: "Werewolf",           hint: "village" },
+    { word: "Go",                 hint: "territory" },
+    { word: "Scrabble",           hint: "letters" },
+    { word: "Codenames",          hint: "spy" },
+    { word: "Risk",               hint: "dominate" },
+    { word: "Jenga",              hint: "tower" },
+    { word: "Clue",               hint: "suspect" },
+    { word: "Pandemic",           hint: "disease" },
+    { word: "Taboo",              hint: "forbidden" },
+    { word: "Dixit",              hint: "dream" },
+    { word: "Gloomhaven",         hint: "campaign" },
+    { word: "Ticket to Ride",     hint: "train" },
+    { word: "Dominion",           hint: "deck" },
+    { word: "Hanabi",             hint: "fireworks" },
+    { word: "Backgammon",         hint: "dice" },
+    { word: "Boggle",             hint: "shake" },
+    { word: "Pictionary",         hint: "draw" },
+    { word: "Bridge",             hint: "trump" },
+    { word: "Magic: The Gathering", hint: "mana" },
+    { word: "Solitaire",          hint: "patience" },
+    { word: "Trivial Pursuit",    hint: "trivia" },
+    { word: "Charades",           hint: "mime" },
+    { word: "The Resistance",     hint: "mission" },
+    { word: "Battleship",         hint: "sink" },
+    { word: "Monopoly",           hint: "banker" },
+    { word: "Checkers",           hint: "jump" },
+    { word: "Coup",               hint: "overthrow" },
+    { word: "7 Wonders",          hint: "draft" },
+    { word: "Azul",               hint: "mosaic" },
+    { word: "Love Letter",        hint: "letter" },
+    { word: "One Night Werewolf", hint: "role" },
+    { word: "Secret Hitler",      hint: "fascist" },
+    { word: "Twister",            hint: "spin" },
+    { word: "Splendor",           hint: "gem" },
+    { word: "Mysterium",          hint: "ghost" },
+    { word: "Skull",              hint: "bet" },
+    { word: "Wits & Wagers",      hint: "wager" },
+    { word: "Exploding Kittens",  hint: "defuse" },
+    { word: "Munchkin",           hint: "backstab" },
+    { word: "Apples to Apples",   hint: "judge" },
+    { word: "UNO",                hint: "draw" },
+    { word: "Connect Four",       hint: "drop" },
+    { word: "Bingo",              hint: "caller" },
+    { word: "Dominoes",           hint: "dots" },
+    { word: "Yahtzee",            hint: "roll" },
+  ],
+
+  "Countries": [
+    { word: "Iceland",            hint: "volcano" },
+    { word: "Bhutan",             hint: "happiness" },
+    { word: "Switzerland",        hint: "neutral" },
+    { word: "Singapore",          hint: "clean" },
+    { word: "Mongolia",           hint: "nomadic" },
+    { word: "Ethiopia",           hint: "coffee" },
+    { word: "Finland",            hint: "sauna" },
+    { word: "New Zealand",        hint: "hobbits" },
+    { word: "Peru",               hint: "Inca" },
+    { word: "Lebanon",            hint: "cedar" },
+    { word: "Georgia",            hint: "wine" },
+    { word: "Morocco",            hint: "souk" },
+    { word: "Myanmar",            hint: "pagoda" },
+    { word: "Nepal",              hint: "flag" },
+    { word: "Cuba",               hint: "embargo" },
+    { word: "Iran",               hint: "carpet" },
+    { word: "Bolivia",            hint: "altitude" },
+    { word: "Oman",               hint: "frankincense" },
+    { word: "Laos",               hint: "landlocked" },
+    { word: "Madagascar",         hint: "lemur" },
+    { word: "Croatia",            hint: "tie" },
+    { word: "Kazakhstan",         hint: "steppe" },
+    { word: "Rwanda",             hint: "recovery" },
+    { word: "Palau",              hint: "jellyfish" },
+    { word: "Sri Lanka",          hint: "tea" },
+    { word: "Cambodia",           hint: "temple" },
+    { word: "Liechtenstein",      hint: "tiny" },
+    { word: "Tonga",              hint: "islands" },
+    { word: "Japan",              hint: "blossom" },
+    { word: "Mexico",             hint: "tequila" },
+    { word: "Brazil",             hint: "carnival" },
+    { word: "Italy",              hint: "espresso" },
+    { word: "Greece",             hint: "olive" },
+    { word: "Egypt",              hint: "Nile" },
+    { word: "India",              hint: "spice" },
+    { word: "Australia",          hint: "outback" },
+    { word: "South Africa",       hint: "safari" },
+    { word: "Thailand",           hint: "temple" },
+    { word: "Seychelles",         hint: "paradise" },
+    { word: "Andorra",            hint: "ski" },
+    { word: "Botswana",           hint: "diamond" },
+    { word: "Papua New Guinea",   hint: "tribes" },
+    { word: "Brunei",             hint: "sultan" },
+    { word: "Bahrain",            hint: "pearl" },
+    { word: "Uruguay",            hint: "football" },
+    { word: "Armenia",            hint: "church" },
+    { word: "Malta",              hint: "knights" },
+    { word: "Jordan",             hint: "canyon" },
+    { word: "Maldives",           hint: "atoll" },
+    { word: "Vietnam",            hint: "bamboo" },
+  ],
+
+  "Inventions": [
+    { word: "Printing press",     hint: "spread" },
+    { word: "Steam engine",       hint: "steam" },
+    { word: "Penicillin",         hint: "mold" },
+    { word: "Transistor",         hint: "switch" },
+    { word: "GPS",                hint: "satellite" },
+    { word: "Refrigeration",      hint: "cold" },
+    { word: "Gunpowder",          hint: "explosion" },
+    { word: "Telephone",          hint: "voice" },
+    { word: "X-ray",              hint: "bone" },
+    { word: "Anesthesia",         hint: "sleep" },
+    { word: "Vaccination",        hint: "immunity" },
+    { word: "Photography",        hint: "light" },
+    { word: "Radio",              hint: "broadcast" },
+    { word: "Concrete",           hint: "pour" },
+    { word: "Eyeglasses",         hint: "lens" },
+    { word: "Dynamite",           hint: "blast" },
+    { word: "Velcro",             hint: "stick" },
+    { word: "Post-it note",       hint: "sticky" },
+    { word: "Microwave oven",     hint: "radar" },
+    { word: "Teflon",             hint: "slippery" },
+    { word: "Pacemaker",          hint: "heartbeat" },
+    { word: "Internet",           hint: "network" },
+    { word: "Airplane",           hint: "lift" },
+    { word: "Clock",              hint: "tick" },
+    { word: "Paper",              hint: "sheet" },
+    { word: "Battery",            hint: "charge" },
+    { word: "Elevator",           hint: "shaft" },
+    { word: "Sewing machine",     hint: "stitch" },
+    { word: "Typewriter",         hint: "keys" },
+    { word: "Barbed wire",        hint: "fence" },
+    { word: "Tin can",            hint: "preserve" },
+    { word: "Stethoscope",        hint: "listen" },
+    { word: "Zipper",             hint: "teeth" },
+    { word: "Nylon",              hint: "synthetic" },
+    { word: "Laser",              hint: "beam" },
+    { word: "Aspirin",            hint: "willow" },
+    { word: "Cement",             hint: "bind" },
+    { word: "Cotton gin",         hint: "cotton" },
+    { word: "Sonar",              hint: "echo" },
+    { word: "Windmill",           hint: "grain" },
+    { word: "Aqueduct",           hint: "water" },
+    { word: "Stirrup",            hint: "horse" },
+    { word: "Barometer",          hint: "pressure" },
+    { word: "Air conditioning",   hint: "cool" },
+    { word: "Stained glass",      hint: "colored" },
+    { word: "Lock",               hint: "key" },
+    { word: "Wheel",              hint: "revolution" },
+    { word: "Parachute",          hint: "safety" },
+    { word: "Sailboat",           hint: "voyage" },
+    { word: "Compass",            hint: "navigate" },
+  ],
+
+  "Famous People": [
+    { word: "Nikola Tesla",       hint: "current" },
+    { word: "Marie Curie",        hint: "glow" },
+    { word: "Leonardo da Vinci",  hint: "mirror" },
+    { word: "Cleopatra",          hint: "asp" },
+    { word: "Napoleon",           hint: "exile" },
+    { word: "Frida Kahlo",        hint: "unibrow" },
+    { word: "Genghis Khan",       hint: "conquest" },
+    { word: "Ada Lovelace",       hint: "algorithm" },
+    { word: "Charles Darwin",     hint: "evolution" },
+    { word: "Galileo",            hint: "telescope" },
+    { word: "Winston Churchill",  hint: "cigar" },
+    { word: "Alan Turing",        hint: "code" },
+    { word: "Amelia Earhart",     hint: "missing" },
+    { word: "Freddie Mercury",    hint: "voice" },
+    { word: "Sigmund Freud",      hint: "dreams" },
+    { word: "Salvador Dalí",      hint: "melting" },
+    { word: "Harriet Tubman",     hint: "railroad" },
+    { word: "Isaac Newton",       hint: "apple" },
+    { word: "Karl Marx",          hint: "manifesto" },
+    { word: "Florence Nightingale", hint: "lamp" },
+    { word: "Archimedes",         hint: "bath" },
+    { word: "Edgar Allan Poe",    hint: "raven" },
+    { word: "Pablo Picasso",      hint: "cubism" },
+    { word: "Stephen Hawking",    hint: "wheelchair" },
+    { word: "Mahatma Gandhi",     hint: "march" },
+    { word: "Nelson Mandela",     hint: "prison" },
+    { word: "Sherlock Holmes",    hint: "deduction" },
+    { word: "Charlie Chaplin",    hint: "silent" },
+    { word: "Elvis Presley",      hint: "hips" },
+    { word: "Albert Einstein",    hint: "tongue" },
+    { word: "Marie Antoinette",   hint: "cake" },
+    { word: "Vincent van Gogh",   hint: "ear" },
+    { word: "Rasputin",           hint: "mystic" },
+    { word: "Marco Polo",         hint: "explorer" },
+    { word: "Beethoven",          hint: "deaf" },
+    { word: "Copernicus",         hint: "solar" },
+    { word: "David Bowie",        hint: "glam" },
+    { word: "Malala Yousafzai",   hint: "shot" },
+    { word: "Sun Tzu",            hint: "strategy" },
+    { word: "Joan of Arc",        hint: "voices" },
+    { word: "Catherine the Great", hint: "empire" },
+    { word: "Michelangelo",       hint: "ceiling" },
+    { word: "Shakespeare",        hint: "playwright" },
+    { word: "Socrates",           hint: "hemlock" },
+    { word: "Wolfgang Mozart",    hint: "prodigy" },
+    { word: "Confucius",          hint: "wisdom" },
+    { word: "Abraham Lincoln",    hint: "hat" },
+    { word: "Audrey Hepburn",     hint: "elegance" },
+    { word: "Marilyn Monroe",     hint: "iconic" },
+    { word: "Rosa Parks",         hint: "bus" },
+  ],
+
+  "Superpowers": [
+    { word: "Telepathy",          hint: "thoughts" },
+    { word: "Telekinesis",        hint: "strain" },
+    { word: "Time travel",        hint: "paradox" },
+    { word: "Invisibility",       hint: "unseen" },
+    { word: "Shapeshifting",      hint: "transform" },
+    { word: "Healing factor",     hint: "heal" },
+    { word: "Super strength",     hint: "lift" },
+    { word: "Flight",             hint: "soar" },
+    { word: "Precognition",       hint: "visions" },
+    { word: "Mind control",       hint: "puppet" },
+    { word: "Elemental control",  hint: "elements" },
+    { word: "Super speed",        hint: "blur" },
+    { word: "Duplication",        hint: "copies" },
+    { word: "Intangibility",      hint: "pass" },
+    { word: "Echolocation",       hint: "echo" },
+    { word: "Size changing",      hint: "shrink" },
+    { word: "Emotion control",    hint: "mood" },
+    { word: "Language mastery",   hint: "tongue" },
+    { word: "Technopathy",        hint: "tech" },
+    { word: "Plant control",      hint: "grow" },
+    { word: "Gravity control",    hint: "gravity" },
+    { word: "Elasticity",         hint: "stretch" },
+    { word: "Memory absorption",  hint: "absorb" },
+    { word: "Luck manipulation",  hint: "luck" },
+    { word: "Power mimicry",      hint: "copy" },
+    { word: "Underwater breathing", hint: "gills" },
+    { word: "Photographic memory", hint: "recall" },
+    { word: "Dream walking",      hint: "dream" },
+    { word: "Magnetism control",  hint: "metal" },
+    { word: "Venom injection",    hint: "venom" },
+    { word: "Sound manipulation", hint: "sonic" },
+    { word: "Wall crawling",      hint: "stick" },
+    { word: "Astral projection",  hint: "astral" },
+    { word: "Fire immunity",      hint: "immune" },
+    { word: "Truth detection",    hint: "detect" },
+    { word: "Animal communication", hint: "commune" },
+    { word: "Weather control",    hint: "storm" },
+    { word: "Portal creation",    hint: "portal" },
+    { word: "Density control",    hint: "dense" },
+    { word: "Force field",        hint: "shield" },
+    { word: "Enhanced senses",    hint: "senses" },
+    { word: "Light bending",      hint: "bend" },
+    { word: "Darkness creation",  hint: "dark" },
+    { word: "Radiation immunity", hint: "resist" },
+    { word: "Teleportation",      hint: "vanish" },
+    { word: "Immortality",        hint: "ageless" },
+    { word: "X-ray vision",       hint: "see-through" },
+    { word: "Super intelligence", hint: "genius" },
+    { word: "Camouflage",         hint: "blend" },
+    { word: "Probability sight",  hint: "foresee" },
+  ],
+
+  "Fears": [
+    { word: "Spiders",            hint: "web" },
+    { word: "Heights",            hint: "ledge" },
+    { word: "Flying",             hint: "turbulence" },
+    { word: "Small spaces",       hint: "narrow" },
+    { word: "Needles",            hint: "needle" },
+    { word: "Drowning",           hint: "surface" },
+    { word: "Darkness",           hint: "shadow" },
+    { word: "Being buried alive", hint: "buried" },
+    { word: "Snakes",             hint: "slither" },
+    { word: "Clowns",             hint: "mask" },
+    { word: "Being watched",      hint: "stare" },
+    { word: "Losing teeth",       hint: "crumble" },
+    { word: "Public speaking",    hint: "stage" },
+    { word: "Mirrors",            hint: "reflection" },
+    { word: "Holes",              hint: "cluster" },
+    { word: "Open ocean",         hint: "abyss" },
+    { word: "Dolls",              hint: "still" },
+    { word: "Crowds",             hint: "trapped" },
+    { word: "Being forgotten",    hint: "erased" },
+    { word: "Getting lost",       hint: "lost" },
+    { word: "Mannequins",         hint: "rigid" },
+    { word: "Birds",              hint: "flock" },
+    { word: "The void",           hint: "void" },
+    { word: "Sharp edges",        hint: "edge" },
+    { word: "Germs",              hint: "contaminate" },
+    { word: "Fire",               hint: "spread" },
+    { word: "Hospitals",          hint: "sterile" },
+    { word: "Being alone",        hint: "silence" },
+    { word: "Sleep paralysis",    hint: "frozen" },
+    { word: "Worms",              hint: "wriggle" },
+    { word: "Aging",              hint: "wrinkle" },
+    { word: "Losing control",     hint: "spiral" },
+    { word: "Thunder",            hint: "rumble" },
+    { word: "Dentists",           hint: "drill" },
+    { word: "Masks",              hint: "hidden" },
+    { word: "Eye contact",        hint: "blink" },
+    { word: "Choking",            hint: "gasp" },
+    { word: "Cockroaches",        hint: "scatter" },
+    { word: "Deep water",         hint: "below" },
+    { word: "Dogs",               hint: "growl" },
+    { word: "Abandonment",        hint: "left" },
+    { word: "Rejection",          hint: "snub" },
+    { word: "Falling",            hint: "jolt" },
+    { word: "The unknown",        hint: "dread" },
+    { word: "Long words",         hint: "spelling" },
+    { word: "Static noise",       hint: "static" },
+    { word: "Blood",              hint: "faint" },
+    { word: "Commitment",         hint: "permanent" },
+    { word: "Insects",            hint: "swarm" },
+    { word: "Failure",            hint: "mistakes" },
+  ],
+
+  "Christmas": [
+    { word: "Mistletoe",          hint: "doorway" },
+    { word: "Advent calendar",    hint: "daily" },
+    { word: "Eggnog",             hint: "spiced" },
+    { word: "Yule log",           hint: "log" },
+    { word: "Rudolph",            hint: "nose" },
+    { word: "Nutcracker",         hint: "ballet" },
+    { word: "Candy cane",         hint: "stripe" },
+    { word: "Fruitcake",          hint: "dense" },
+    { word: "Boxing Day",         hint: "box" },
+    { word: "Poinsettia",         hint: "toxic" },
+    { word: "Christmas crackers", hint: "pop" },
+    { word: "Elf on the Shelf",   hint: "naughty" },
+    { word: "Wreath",             hint: "door" },
+    { word: "Tinsel",             hint: "glitter" },
+    { word: "Stocking",           hint: "candy" },
+    { word: "Myrrh",              hint: "scent" },
+    { word: "Frankincense",       hint: "incense" },
+    { word: "White Elephant",     hint: "swap" },
+    { word: "Figgy pudding",      hint: "carol" },
+    { word: "Epiphany",           hint: "kings" },
+    { word: "Carol singers",      hint: "singing" },
+    { word: "Christmas jumper",   hint: "ugly" },
+    { word: "Krampus",            hint: "demon" },
+    { word: "Stollen",            hint: "loaf" },
+    { word: "Mulled wine",        hint: "warm" },
+    { word: "Christmas tree",     hint: "pine" },
+    { word: "Gingerbread house",  hint: "icing" },
+    { word: "Star of Bethlehem",  hint: "star" },
+    { word: "Reindeer",           hint: "antler" },
+    { word: "Midnight mass",      hint: "midnight" },
+    { word: "Coal in stocking",   hint: "bad" },
+    { word: "Nativity scene",     hint: "manger" },
+    { word: "Christmas pudding",  hint: "coin" },
+    { word: "Secret Santa",       hint: "draw" },
+    { word: "Snowglobe",          hint: "globe" },
+    { word: "Christmas Eve",      hint: "eve" },
+    { word: "Wassail",            hint: "toast" },
+    { word: "Bauble",             hint: "ornament" },
+    { word: "Christmas lights",   hint: "display" },
+    { word: "Angel tree topper",  hint: "angel" },
+    { word: "Chimney",            hint: "soot" },
+    { word: "Sleigh bells",       hint: "jingle" },
+    { word: "Mince pies",         hint: "pastry" },
+    { word: "Turkey",             hint: "feast" },
+    { word: "Christmas bonus",    hint: "envelope" },
+    { word: "Pine cone",          hint: "fallen" },
+    { word: "December 26th",      hint: "returns" },
+    { word: "Ugly sweater party", hint: "compete" },
+    { word: "Caroling",           hint: "sing" },
+    { word: "Christmas market",   hint: "outdoor" },
+  ],
+
+  "Movies & TV": [
+    { word: "Jurassic Park",      hint: "DNA" },
+    { word: "The Godfather",      hint: "offer" },
+    { word: "Breaking Bad",       hint: "blue" },
+    { word: "Inception",          hint: "dream" },
+    { word: "The Matrix",         hint: "choice" },
+    { word: "Titanic",            hint: "door" },
+    { word: "Game of Thrones",    hint: "wedding" },
+    { word: "The Shining",        hint: "maze" },
+    { word: "Parasite",           hint: "basement" },
+    { word: "Schindler's List",   hint: "red coat" },
+    { word: "Fargo",              hint: "wood chipper" },
+    { word: "Pulp Fiction",       hint: "briefcase" },
+    { word: "The Wire",           hint: "corner" },
+    { word: "Twin Peaks",         hint: "curtain" },
+    { word: "Blade Runner",       hint: "empathy" },
+    { word: "Forrest Gump",       hint: "chocolate" },
+    { word: "Back to the Future", hint: "flux" },
+    { word: "Alien",              hint: "chest" },
+    { word: "Psycho",             hint: "shower" },
+    { word: "The Truman Show",    hint: "staged" },
+    { word: "Mad Men",            hint: "identity" },
+    { word: "The Office",         hint: "mockumentary" },
+    { word: "Arrested Development", hint: "staircar" },
+    { word: "Seinfeld",           hint: "nothing" },
+    { word: "Black Mirror",       hint: "twist" },
+    { word: "Stranger Things",    hint: "upside down" },
+    { word: "The Sopranos",       hint: "ducks" },
+    { word: "Lost",               hint: "numbers" },
+    { word: "Westworld",          hint: "loop" },
+    { word: "Sherlock",           hint: "deduction" },
+    { word: "Chernobyl",          hint: "meltdown" },
+    { word: "Mindhunter",         hint: "profiler" },
+    { word: "Succession",         hint: "heir" },
+    { word: "Fleabag",            hint: "aside" },
+    { word: "Squid Game",         hint: "tracksuit" },
+    { word: "The Bear",           hint: "chef" },
+    { word: "No Country for Old Men", hint: "coin" },
+    { word: "There Will Be Blood", hint: "milkshake" },
+    { word: "Arrival",            hint: "language" },
+    { word: "Interstellar",       hint: "gravity" },
+    { word: "Spirited Away",      hint: "spirit" },
+    { word: "Oldboy",             hint: "revenge" },
+    { word: "The Grand Budapest Hotel", hint: "hotel" },
+    { word: "Moon",               hint: "clone" },
+    { word: "Ex Machina",         hint: "robot" },
+    { word: "Whiplash",           hint: "drumming" },
+    { word: "2001: A Space Odyssey", hint: "HAL" },
+    { word: "Princess Mononoke",  hint: "forest" },
+    { word: "The Mandalorian",    hint: "baby" },
+    { word: "Planet Earth",       hint: "patience" },
+  ],
+
+  "Nature & Phenomena": [
+    { word: "Aurora borealis",    hint: "shimmer" },
+    { word: "Earthquake",         hint: "tremor" },
+    { word: "Tornado",            hint: "funnel" },
+    { word: "Bioluminescence",    hint: "glow" },
+    { word: "Solar eclipse",      hint: "shadow" },
+    { word: "Tsunami",            hint: "surge" },
+    { word: "Volcanic eruption",  hint: "lava" },
+    { word: "Geyser",             hint: "steam" },
+    { word: "Sinkhole",           hint: "collapse" },
+    { word: "Mirage",             hint: "heat" },
+    { word: "Polar vortex",       hint: "arctic" },
+    { word: "Dust devil",         hint: "whirl" },
+    { word: "Blood moon",         hint: "red" },
+    { word: "Flash flood",        hint: "rush" },
+    { word: "Double rainbow",     hint: "double" },
+    { word: "Rainbow",            hint: "arc" },
+    { word: "Lightning",          hint: "bolt" },
+    { word: "Avalanche",          hint: "slope" },
+    { word: "Blizzard",           hint: "whiteout" },
+    { word: "Quicksand",          hint: "sink" },
+    { word: "Drought",            hint: "cracked" },
+    { word: "Hailstorm",          hint: "pelt" },
+    { word: "Hurricane",          hint: "spiral" },
+    { word: "Monsoon",            hint: "season" },
+    { word: "Flood",              hint: "rise" },
+    { word: "Heatwave",           hint: "scorching" },
+    { word: "Wildfire",           hint: "spread" },
+    { word: "Fog",                hint: "grey" },
+    { word: "Sandstorm",          hint: "wall" },
+    { word: "Thunderstorm",       hint: "crack" },
+    { word: "Landslide",          hint: "crumble" },
+    { word: "Frost",              hint: "brittle" },
+    { word: "Whirlpool",          hint: "swirl" },
+    { word: "Waterspout",         hint: "column" },
+    { word: "Meteor shower",      hint: "streak" },
+    { word: "Ice age",            hint: "ancient" },
+    { word: "Coral reef",         hint: "alive" },
+    { word: "Glacier",            hint: "creep" },
+    { word: "Tide",               hint: "rhythm" },
+    { word: "Mudslide",           hint: "ooze" },
+    { word: "Sunset",             hint: "horizon" },
+    { word: "Supernova",          hint: "explosion" },
+    { word: "Sand dune",          hint: "shifting" },
+    { word: "Shooting star",      hint: "wish" },
+    { word: "Snowflake",          hint: "crystal" },
+    { word: "Cyclone",            hint: "rotate" },
+    { word: "Comet",              hint: "tail" },
+    { word: "Downpour",           hint: "drench" },
+    { word: "Tundra",             hint: "vast" },
+    { word: "Thunder",            hint: "rumble" },
+  ],
+
+  "Places": [
+    { word: "Beach",              hint: "waves" },
+    { word: "Mountain",           hint: "peak" },
+    { word: "City",               hint: "crowded" },
+    { word: "Desert",             hint: "thirst" },
+    { word: "Forest",             hint: "shade" },
+    { word: "Island",             hint: "remote" },
+    { word: "Airport",            hint: "departure" },
+    { word: "Museum",             hint: "exhibit" },
+    { word: "Park",               hint: "bench" },
+    { word: "School",             hint: "chalk" },
+    { word: "Library",            hint: "silence" },
+    { word: "Bridge",             hint: "crossing" },
+    { word: "Castle",             hint: "moat" },
+    { word: "Stadium",            hint: "roar" },
+    { word: "Market",             hint: "stalls" },
+    { word: "Theater",            hint: "curtain" },
+    { word: "Hotel",              hint: "lobby" },
+    { word: "Farm",               hint: "harvest" },
+    { word: "Lighthouse",         hint: "warning" },
+    { word: "Subway",             hint: "underground" },
+    { word: "Skyscraper",         hint: "height" },
+    { word: "Cemetery",           hint: "eerie" },
+    { word: "Harbor",             hint: "dock" },
+    { word: "Jungle",             hint: "dense" },
+    { word: "Cave",               hint: "dark" },
+    { word: "Waterfall",          hint: "mist" },
+    { word: "Ruins",              hint: "ancient" },
+    { word: "Maze",               hint: "lost" },
+    { word: "Carnival",           hint: "rides" },
+    { word: "Cliff",              hint: "edge" },
+    { word: "River",              hint: "flow" },
+    { word: "Valley",             hint: "low" },
+    { word: "Mine",               hint: "tunnel" },
+    { word: "Temple",             hint: "ritual" },
+    { word: "Zoo",                hint: "cage" },
+    { word: "Bakery",             hint: "aroma" },
+    { word: "Gym",                hint: "weights" },
+    { word: "Prison",             hint: "bars" },
+    { word: "Volcano",            hint: "magma" },
+    { word: "Garden",             hint: "bloom" },
+    { word: "Hospital",           hint: "ward" },
+    { word: "Racetrack",          hint: "speed" },
+    { word: "Palace",             hint: "throne" },
+    { word: "Port",               hint: "ship" },
+    { word: "Campsite",           hint: "tent" },
+    { word: "Observatory",        hint: "dome" },
+    { word: "Rooftop",            hint: "view" },
+    { word: "Alley",              hint: "narrow" },
+    { word: "Swamp",              hint: "murky" },
+    { word: "Glacier",            hint: "ice" },
+  ],
+
+  "Myths & Fantasy": [
+    { word: "Dragon",             hint: "fire" },
+    { word: "Phoenix",            hint: "rebirth" },
+    { word: "Unicorn",            hint: "horn" },
+    { word: "Mermaid",            hint: "tail" },
+    { word: "Werewolf",           hint: "moon" },
+    { word: "Vampire",            hint: "cape" },
+    { word: "Witch",              hint: "broomstick" },
+    { word: "Wizard",             hint: "wand" },
+    { word: "Fairy",              hint: "wings" },
+    { word: "Giant",              hint: "stomp" },
+    { word: "Goblin",             hint: "greed" },
+    { word: "Troll",              hint: "lurk" },
+    { word: "Elf",                hint: "pointy" },
+    { word: "Dwarf",              hint: "mine" },
+    { word: "Ghost",              hint: "transparent" },
+    { word: "Zombie",             hint: "slow" },
+    { word: "Minotaur",           hint: "labyrinth" },
+    { word: "Centaur",            hint: "gallop" },
+    { word: "Sphinx",             hint: "riddle" },
+    { word: "Kraken",             hint: "tentacles" },
+    { word: "Medusa",             hint: "stone" },
+    { word: "Pegasus",            hint: "wing" },
+    { word: "Genie",              hint: "lamp" },
+    { word: "Hydra",              hint: "heads" },
+    { word: "Siren",              hint: "song" },
+    { word: "Oracle",             hint: "prophecy" },
+    { word: "Knight",             hint: "armor" },
+    { word: "Pirate",             hint: "treasure" },
+    { word: "Ninja",              hint: "stealth" },
+    { word: "Samurai",            hint: "honor" },
+    { word: "Viking",             hint: "raid" },
+    { word: "Gladiator",          hint: "arena" },
+    { word: "Alchemist",          hint: "gold" },
+    { word: "Demon",              hint: "horns" },
+    { word: "Angel",              hint: "halo" },
+    { word: "Titan",              hint: "massive" },
+    { word: "Valkyrie",           hint: "battle" },
+    { word: "Warlock",            hint: "curse" },
+    { word: "Leprechaun",         hint: "clover" },
+    { word: "Cyclops",            hint: "eye" },
+    { word: "Banshee",            hint: "wail" },
+    { word: "Ogre",               hint: "smelly" },
+    { word: "Basilisk",           hint: "gaze" },
+    { word: "Golem",              hint: "clay" },
+    { word: "Mummy",              hint: "wraps" },
+    { word: "Serpent",            hint: "coil" },
+    { word: "Sorcerer",           hint: "spell" },
+    { word: "Enchantress",        hint: "charm" },
+    { word: "Shapeshifter",       hint: "form" },
+    { word: "Jinn",               hint: "smoke" },
+  ],
+
+};
+
+/* ===================== GAME STATE ===================== */
+const GameState = {
+  mode: null,           // 'pass' | 'multiplayer'
+  players: [],          // [{ id, name, wins, isHost? }]
+  localPlayerId: null,
+  imposterIndex: null,
+  wordPair: null,       // { category, word, hint }
+  clues: {},            // { playerId: clueString|null }
+  votes: {},            // { voterId: accusedId|null }
+  phase: null,
+  round: 0,
+  peekIndex: 0,
+  clueIndex: 0,
+  voteIndex: 0,
+  selectedVote: null,
+  usedWordKeys: new Set(),
+  _timerCancel: null,
+};
+
+/* ===================== UTILITIES ===================== */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function avatarColor(name) {
+  const colors = ['#e94560','#533483','#0f6a3c','#0f3460','#8a4a00','#006a6a','#6a0f3c','#4a0f8a'];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return colors[Math.abs(h) % colors.length];
+}
+
+function avatarInitials(name) {
+  return name.trim().charAt(0).toUpperCase();
+}
+
+function pickWordPair() {
+  const categories = Object.keys(WORD_CATEGORIES);
+  let pair, key;
+  let tries = 0;
+  do {
+    const cat = categories[Math.floor(Math.random() * categories.length)];
+    const pairs = WORD_CATEGORIES[cat];
+    const idx = Math.floor(Math.random() * pairs.length);
+    pair = { category: cat, ...pairs[idx] };
+    key = cat + ':' + pair.word;
+    tries++;
+  } while (GameState.usedWordKeys.has(key) && tries < 300);
+  GameState.usedWordKeys.add(key);
+  if (GameState.usedWordKeys.size > 200) GameState.usedWordKeys.clear();
+  return pair;
+}
+
+function assignImposterIndex(players) {
+  return Math.floor(Math.random() * players.length);
+}
+
+function calculateResults(votes, imposterIndex, players) {
+  const imposterId = players[imposterIndex].id;
+  const tally = {};
+  let correctVotes = 0;
+  let validVoteCount = 0;
+
+  Object.entries(votes).forEach(([voterId, accusedId]) => {
+    if (accusedId === null) return; // abstain
+    validVoteCount++;
+    tally[accusedId] = (tally[accusedId] || 0) + 1;
+    if (accusedId === imposterId) correctVotes++;
+  });
+
+  const imposterCaught = validVoteCount > 0 && correctVotes > validVoteCount / 2;
+
+  // Wins: crew all get +1 if caught; imposter gets +1 if escaped
+  const deltas = {};
+  players.forEach(p => { deltas[p.id] = 0; });
+  if (imposterCaught) {
+    players.forEach(p => { if (p.id !== imposterId) deltas[p.id] = 1; });
+  } else {
+    deltas[imposterId] = 1;
+  }
+
+  return { imposterCaught, imposterId, deltas, tally };
+}
+
+function applyWins(deltas) {
+  GameState.players.forEach(p => {
+    if (deltas[p.id]) p.wins = (p.wins || 0) + deltas[p.id];
+  });
+}
+
+function startTimer(seconds, onTick, onDone) {
+  if (GameState._timerCancel) GameState._timerCancel();
+  let remaining = seconds;
+  onTick(remaining, seconds);
+  const iv = setInterval(() => {
+    remaining--;
+    onTick(remaining, seconds);
+    if (remaining <= 0) {
+      clearInterval(iv);
+      GameState._timerCancel = null;
+      onDone();
+    }
+  }, 1000);
+  GameState._timerCancel = () => clearInterval(iv);
+  return () => clearInterval(iv);
+}
+
+function stopTimer() {
+  if (GameState._timerCancel) {
+    GameState._timerCancel();
+    GameState._timerCancel = null;
+  }
+}
+
+function renderTimerBar(fillId, textId, remaining, total) {
+  const fill = document.getElementById(fillId);
+  const text = document.getElementById(textId);
+  if (!fill || !text) return;
+  const pct = Math.max(0, (remaining / total) * 100);
+  fill.style.width = pct + '%';
+  fill.classList.remove('urgent', 'critical');
+  if (remaining <= 10) fill.classList.add('critical');
+  else if (remaining <= total * 0.3) fill.classList.add('urgent');
+  text.textContent = remaining + 's';
+}
+
+function renderPlayerAvatar(container, name, size = 36) {
+  container.style.width = size + 'px';
+  container.style.height = size + 'px';
+  container.style.background = avatarColor(name);
+  container.textContent = avatarInitials(name);
+}
+
+function toggleRules() {
+  const box = document.getElementById('rules-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyRoomCode() {
+  const code = document.getElementById('lobby-room-code').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.btn-copy');
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+    });
+  }
+}
+
+function confirmExit() {
+  if (confirm('Exit the game? Progress will be lost.')) {
+    endGame();
+  }
+}
+
+/* ===================== REVEAL SCREEN (shared) ===================== */
+function showReveal(results) {
+  stopTimer();
+  const { imposterCaught, imposterId, deltas, tally } = results;
+  const imposter = GameState.players.find(p => p.id === imposterId);
+  applyWins(deltas);
+
+  // Result banner
+  const banner = document.getElementById('reveal-result-banner');
+  banner.className = 'result-banner ' + (imposterCaught ? 'caught' : 'escaped');
+  banner.textContent = imposterCaught
+    ? '🎉 Crew wins! Imposter caught!'
+    : '😈 Imposter wins! They escaped!';
+
+  // Category
+  document.getElementById('reveal-category').textContent = GameState.wordPair.category;
+
+  // Imposter & word
+  document.getElementById('reveal-imposter-name').textContent = imposter ? imposter.name : '?';
+  document.getElementById('reveal-word').textContent = GameState.wordPair.word;
+  document.getElementById('reveal-hint').textContent = 'Imposter\'s hint: "' + GameState.wordPair.hint + '"';
+
+  // Vote tally
+  const tallyEl = document.getElementById('reveal-vote-tally');
+  tallyEl.innerHTML = '<div class="reveal-section-label">Vote Tally</div>';
+  GameState.players.forEach(p => {
+    const count = tally[p.id] || 0;
+    const row = document.createElement('div');
+    row.className = 'tally-row' + (p.id === imposterId ? ' is-imposter' : '');
+    row.innerHTML = `<span class="tally-name">${p.name}${p.id === imposterId ? ' 🕵️' : ''}</span><span class="tally-votes">${count} vote${count !== 1 ? 's' : ''}</span>`;
+    tallyEl.appendChild(row);
+  });
+
+  // Wins leaderboard
+  const scoresEl = document.getElementById('reveal-scores');
+  scoresEl.innerHTML = '<div class="reveal-section-label">🏆 Wins</div>';
+  const sorted = [...GameState.players].sort((a, b) => (b.wins || 0) - (a.wins || 0));
+  sorted.forEach(p => {
+    const gained = deltas[p.id] > 0;
+    const row = document.createElement('div');
+    row.className = 'score-row' + (gained ? ' gained' : '');
+    row.innerHTML = `
+      <span class="score-name">${p.name}</span>
+      ${gained ? '<span class="score-delta">+1 win</span>' : '<span></span>'}
+      <span class="score-total">${p.wins || 0}</span>
+    `;
+    scoresEl.appendChild(row);
+  });
+
+  // Show/hide Next Round button (host only in multiplayer)
+  const nextBtn = document.getElementById('reveal-next-btn');
+  if (GameState.mode === 'multiplayer') {
+    const localPlayer = GameState.players.find(pl => pl.id === GameState.localPlayerId);
+    nextBtn.style.display = (localPlayer && localPlayer.isHost) ? '' : 'none';
+  } else {
+    nextBtn.style.display = '';
+  }
+
+  showScreen('screen-reveal');
+}
+
+function endGame() {
+  stopTimer();
+  if (typeof multiplayerCleanup === 'function') multiplayerCleanup();
+  Object.assign(GameState, {
+    mode: null, players: [], localPlayerId: null, imposterIndex: null,
+    wordPair: null, clues: {}, votes: {}, phase: null, round: 0,
+    peekIndex: 0, clueIndex: 0, voteIndex: 0, selectedVote: null,
+    usedWordKeys: new Set(),
+  });
+  showScreen('screen-home');
+}
+
+function showError(msg) {
+  document.getElementById('error-msg-text').textContent = msg;
+  showScreen('screen-error');
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  showScreen('screen-home');
+});
+
+
+// === pass-device.js ===
+/* ===================== MODE A: PASS-DEVICE ===================== */
+
+function startPassDevice() {
+  GameState.mode = 'pass';
+  GameState.players = [];
+  document.getElementById('pass-player-chips').innerHTML = '';
+  document.getElementById('pass-name-input').value = '';
+  document.getElementById('pass-error').textContent = '';
+  document.getElementById('pass-start-btn').disabled = true;
+  showScreen('screen-setup-pass');
+  setTimeout(() => document.getElementById('pass-name-input').focus(), 100);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screen-setup-pass').classList.contains('active') && e.key === 'Enter') addPassPlayer();
+  if (document.getElementById('screen-clue').classList.contains('active') && e.key === 'Enter') submitClue();
+});
+
+function addPassPlayer() {
+  const input = document.getElementById('pass-name-input');
+  const name = input.value.trim();
+  const errEl = document.getElementById('pass-error');
+  if (!name) { errEl.textContent = 'Enter a name.'; return; }
+  if (name.length > 20) { errEl.textContent = 'Name too long.'; return; }
+  if (GameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) { errEl.textContent = 'Name already taken.'; return; }
+  if (GameState.players.length >= 10) { errEl.textContent = 'Max 10 players.'; return; }
+  errEl.textContent = '';
+  const id = 'p' + Date.now() + Math.random().toString(36).slice(2);
+  GameState.players.push({ id, name, wins: 0 });
+  input.value = '';
+  input.focus();
+  renderPassChips();
+  document.getElementById('pass-start-btn').disabled = GameState.players.length < 3;
+}
+
+function renderPassChips() {
+  const container = document.getElementById('pass-player-chips');
+  container.innerHTML = '';
+  GameState.players.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `<span>${p.name}</span><span class="chip-remove" onclick="removePassPlayer(${i})">✕</span>`;
+    container.appendChild(chip);
+  });
+}
+
+function removePassPlayer(idx) {
+  GameState.players.splice(idx, 1);
+  renderPassChips();
+  document.getElementById('pass-start-btn').disabled = GameState.players.length < 3;
+}
+
+function startPassGame() {
+  if (GameState.players.length < 3) return;
+  GameState.round++;
+  GameState.clues = {};
+  GameState.votes = {};
+  GameState.peekIndex = 0;
+  GameState.clueIndex = 0;
+  GameState.voteIndex = 0;
+  GameState.selectedVote = null;
+  GameState.wordPair = pickWordPair();
+  GameState.imposterIndex = assignImposterIndex(GameState.players);
+  GameState.phase = 'peek';
+  showPeekScreen();
+}
+
+/* ---------- PEEK ---------- */
+function showPeekScreen() {
+  const player = GameState.players[GameState.peekIndex];
+  document.getElementById('peek-cover').style.display = 'flex';
+  document.getElementById('peek-reveal').style.display = 'none';
+
+  const avatarEl = document.getElementById('peek-avatar');
+  renderPlayerAvatar(avatarEl, player.name, 76);
+  document.getElementById('peek-cover-name').textContent = player.name;
+  showScreen('screen-peek');
+}
+
+function peekReveal() {
+  const idx = GameState.peekIndex;
+  const player = GameState.players[idx];
+  const isImposter = idx === GameState.imposterIndex;
+
+  document.getElementById('peek-cover').style.display = 'none';
+  const revealEl = document.getElementById('peek-reveal');
+  revealEl.style.display = 'flex';
+  revealEl.style.flexDirection = 'column';
+  revealEl.style.alignItems = 'center';
+
+  // Category tag
+  document.getElementById('peek-category-tag').textContent = GameState.wordPair.category;
+
+  // Role card
+  const card = document.getElementById('peek-role-card');
+  card.className = 'role-card ' + (isImposter ? 'imposter-card' : 'word-card');
+  document.getElementById('peek-role-label').textContent = isImposter ? '🕵️ You are the Imposter' : '✅ Your word is';
+  document.getElementById('peek-role-value').textContent = isImposter ? GameState.wordPair.hint : GameState.wordPair.word;
+  document.getElementById('peek-role-sub').textContent = isImposter
+    ? 'Blend in — don\'t reveal your hint!'
+    : 'Describe it without saying the word!';
+
+  const doneBtn = document.getElementById('peek-done-btn');
+  const isLast = idx === GameState.players.length - 1;
+  doneBtn.textContent = isLast ? 'Everyone ready — Start! ➜' : 'Done — pass device ➜';
+}
+
+function peekDone() {
+  GameState.peekIndex++;
+  if (GameState.peekIndex >= GameState.players.length) {
+    GameState.phase = 'clue';
+    GameState.clueIndex = 0;
+    showPassClueScreen();
+  } else {
+    showPeekScreen();
+  }
+}
+
+/* ---------- CLUE (pass-device sequential) ---------- */
+function showPassClueScreen() {
+  const idx = GameState.clueIndex;
+  const player = GameState.players[idx];
+  const isImposter = idx === GameState.imposterIndex;
+
+  // Category
+  document.getElementById('clue-category-tag').textContent = GameState.wordPair.category;
+
+  // Word box
+  const wordBox = document.getElementById('clue-word-box');
+  if (isImposter) {
+    wordBox.innerHTML = `Your hint: <strong>${GameState.wordPair.hint}</strong> <span style="color:var(--text-muted);font-size:0.78rem">(you are the imposter)</span>`;
+  } else {
+    wordBox.innerHTML = `The word: <strong>${GameState.wordPair.word}</strong>`;
+  }
+
+  renderPreviousClues();
+  document.getElementById('clue-turn-msg').textContent = `${player.name}, enter your clue:`;
+  document.getElementById('clue-input-area').style.display = '';
+  document.getElementById('clue-waiting').style.display = 'none';
+  document.getElementById('clue-input').value = '';
+  document.getElementById('clue-error').textContent = '';
+  showScreen('screen-clue');
+  setTimeout(() => document.getElementById('clue-input').focus(), 100);
+}
+
+function renderPreviousClues() {
+  const container = document.getElementById('clue-previous');
+  container.innerHTML = '';
+  GameState.players.forEach((p, i) => {
+    if (i >= GameState.clueIndex) return; // only show already-submitted
+    const clue = GameState.clues[p.id];
+    if (clue === undefined) return;
+    const item = document.createElement('div');
+    item.className = 'clue-item';
+    item.innerHTML = `<span class="clue-name">${p.name}</span><span class="clue-word">${clue || '(passed)'}</span>`;
+    container.appendChild(item);
+  });
+}
+
+/* ---------- DISCUSSION ---------- */
+function showPassDiscussion() {
+  GameState.phase = 'discussion';
+  renderDiscussionClues();
+  const DISC_SECONDS = 180;
+  startTimer(DISC_SECONDS,
+    (r, t) => renderTimerBar('disc-timer-bar', 'disc-timer-text', r, t),
+    () => goToVoting()
+  );
+  document.getElementById('disc-vote-btn').disabled = false;
+  document.getElementById('disc-vote-btn').textContent = 'Start Voting';
+  showScreen('screen-discussion');
+}
+
+function renderDiscussionClues() {
+  const container = document.getElementById('discussion-clues');
+  container.innerHTML = '';
+  GameState.players.forEach(p => {
+    const clue = GameState.clues[p.id];
+    const item = document.createElement('div');
+    item.className = 'clue-item';
+    item.innerHTML = `<span class="clue-name">${p.name}</span><span class="clue-word">${clue || '(passed)'}</span>`;
+    container.appendChild(item);
+  });
+}
+
+/* ---------- VOTING (pass-device sequential) ---------- */
+function showPassVotingScreen() {
+  const voter = GameState.players[GameState.voteIndex];
+  GameState.selectedVote = null;
+
+  document.getElementById('voting-prompt').textContent = `${voter.name}, vote for the imposter:`;
+  document.getElementById('voting-confirm-btn').disabled = true;
+  document.getElementById('voting-confirm-btn').style.display = '';
+  document.getElementById('voting-skip-btn').style.display = '';
+  document.getElementById('voting-waiting').style.display = 'none';
+
+  const list = document.getElementById('voting-player-list');
+  list.innerHTML = '';
+  GameState.players.forEach(p => {
+    const isSelf = p.id === voter.id;
+    const item = document.createElement('div');
+    item.className = 'vote-item' + (isSelf ? ' disabled' : '');
+    item.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:50%;background:${avatarColor(p.name)};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${avatarInitials(p.name)}</div>
+      <span class="vote-item-name">${p.name}</span>
+      <span class="vote-item-check" style="display:none">✓</span>
+    `;
+    if (!isSelf) item.onclick = () => selectVote(p.id, item);
+    list.appendChild(item);
+  });
+
+  showScreen('screen-voting');
+}
+
+function selectVote(targetId, itemEl) {
+  GameState.selectedVote = targetId;
+  document.querySelectorAll('.vote-item').forEach(el => {
+    el.classList.remove('selected');
+    const check = el.querySelector('.vote-item-check');
+    if (check) check.style.display = 'none';
+  });
+  itemEl.classList.add('selected');
+  const check = itemEl.querySelector('.vote-item-check');
+  if (check) check.style.display = '';
+  document.getElementById('voting-confirm-btn').disabled = false;
+}
+
+/* ---------- PLAY AGAIN ---------- */
+function playAgain() {
+  if (GameState.mode === 'pass') {
+    startPassGame();
+  } else {
+    multiplayerPlayAgain();
+  }
+}
+
+
+// === multiplayer.js ===
+/* ===================== MODE B: MULTIPLAYER (PeerJS) ===================== */
+
+let _peer = null;
+let _hostConn = null;
+let _connections = {};
+let _isHost = false;
+let _myPeerId = null;
+
+function multiplayerCleanup() {
+  if (_peer) { try { _peer.destroy(); } catch(e){} _peer = null; }
+  _hostConn = null;
+  _connections = {};
+  _isHost = false;
+  _myPeerId = null;
+}
+
+/* ===================== HOST ===================== */
+function hostCreateRoom() {
+  const nameInput = document.getElementById('host-name-input');
+  const name = nameInput.value.trim();
+  const errEl = document.getElementById('host-error');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Enter your name.'; return; }
+
+  multiplayerCleanup();
+  GameState.mode = 'multiplayer';
+  GameState.players = [];
+  GameState.usedWordKeys = new Set();
+
+  const code = generateRoomCode();
+  const peerId = 'imposter-' + code;
+
+  showScreen('screen-connecting');
+  document.getElementById('connecting-msg').textContent = 'Creating room...';
+
+  _peer = new Peer(peerId, { debug: 0 });
+
+  _peer.on('open', (id) => {
+    _isHost = true;
+    _myPeerId = id;
+    const hostPlayer = { id: peerId, name, wins: 0, isHost: true };
+    GameState.players.push(hostPlayer);
+    GameState.localPlayerId = peerId;
+
+    document.getElementById('lobby-room-code').textContent = code;
+    document.getElementById('lobby-start-btn').style.display = '';
+    document.getElementById('lobby-start-btn').disabled = true;
+    document.getElementById('lobby-wait-msg').style.display = 'none';
+    renderLobbyPlayers();
+    updateLobbyStatus();
+    showScreen('screen-lobby');
+  });
+
+  _peer.on('connection', (conn) => {
+    if (GameState.phase && GameState.phase !== 'lobby') {
+      conn.on('open', () => { conn.send({ type: 'error', message: 'Game in progress. Try again later.' }); setTimeout(() => conn.close(), 1000); });
+      return;
+    }
+    if (GameState.players.length >= 10) {
+      conn.on('open', () => { conn.send({ type: 'error', message: 'Room is full.' }); setTimeout(() => conn.close(), 1000); });
+      return;
+    }
+    conn.on('open', () => {
+      _connections[conn.peer] = conn;
+      conn.on('data', (msg) => hostHandleMessage(conn.peer, msg));
+      conn.on('close', () => hostHandleDisconnect(conn.peer));
+      conn.on('error', () => hostHandleDisconnect(conn.peer));
+    });
+  });
+
+  _peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') { multiplayerCleanup(); hostCreateRoom(); }
+    else showError('Connection error: ' + (err.message || err.type));
+  });
+}
+
+function hostHandleMessage(peerId, msg) {
+  switch (msg.type) {
+    case 'join': {
+      const name = (msg.name || '').trim().slice(0, 20);
+      if (!name) return;
+      if (GameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        const conn = _connections[peerId];
+        if (conn) conn.send({ type: 'error', message: 'Name already taken. Choose a different name.' });
+        return;
+      }
+      const player = { id: peerId, name, wins: 0, isHost: false };
+      GameState.players.push(player);
+      renderLobbyPlayers();
+      updateLobbyStatus();
+      const conn = _connections[peerId];
+      if (conn) conn.send({ type: 'join_ok', players: sanitizePlayers() });
+      hostBroadcast({ type: 'player_joined', players: sanitizePlayers() }, peerId);
+      break;
+    }
+    case 'submit_clue': {
+      const player = GameState.players.find(p => p.id === peerId);
+      if (!player || GameState.phase !== 'clue') return;
+      if (GameState.clues[peerId] !== undefined) return;
+      GameState.clues[peerId] = msg.clue || null;
+      hostBroadcastAll({ type: 'clue_received', playerId: peerId, clues: GameState.clues });
+      const connected = GameState.players.filter(p => p.isConnected !== false);
+      if (connected.every(p => GameState.clues[p.id] !== undefined)) hostTransitionDiscussion();
+      break;
+    }
+    case 'submit_vote': {
+      const player = GameState.players.find(p => p.id === peerId);
+      if (!player || GameState.phase !== 'voting') return;
+      if (GameState.votes[peerId] !== undefined) return;
+      // null = abstain (skip), otherwise validate target
+      if (msg.targetId !== null) {
+        if (msg.targetId === peerId) return;
+        if (!GameState.players.find(p => p.id === msg.targetId)) return;
+      }
+      GameState.votes[peerId] = msg.targetId;
+      hostBroadcastAll({ type: 'vote_cast', voteCount: Object.keys(GameState.votes).length });
+      const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+      if (activePlayers.every(p => GameState.votes[p.id] !== undefined)) hostResolveVoting();
+      break;
+    }
+    case 'start_voting': {
+      if (GameState.phase === 'discussion') hostTransitionVoting();
+      break;
+    }
+    case 'next_round': {
+      if (_isHost && GameState.phase === 'reveal') hostStartRound();
+      break;
+    }
+  }
+}
+
+function hostHandleDisconnect(peerId) {
+  delete _connections[peerId];
+  const player = GameState.players.find(p => p.id === peerId);
+  if (!player) return;
+  player.isConnected = false;
+  hostBroadcastAll({ type: 'player_left', playerId: peerId, playerName: player.name });
+
+  const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+
+  if (activePlayers.length < 2 && GameState.phase && GameState.phase !== 'lobby' && GameState.phase !== 'reveal') {
+    stopTimer();
+    GameState.phase = 'lobby';
+    GameState.players = activePlayers;
+    renderLobbyPlayers();
+    updateLobbyStatus();
+    hostBroadcastAll({ type: 'game_aborted', message: 'Not enough players. Returned to lobby.' });
+    showScreen('screen-lobby');
+    return;
+  }
+
+  if (GameState.phase === 'clue' && GameState.clues[peerId] === undefined) {
+    GameState.clues[peerId] = null;
+    hostBroadcastAll({ type: 'clue_received', playerId: peerId, clues: GameState.clues });
+    if (activePlayers.every(p => GameState.clues[p.id] !== undefined)) hostTransitionDiscussion();
+  }
+
+  if (GameState.phase === 'voting' && GameState.votes[peerId] === undefined) {
+    GameState.votes[peerId] = null; // auto-abstain
+    hostBroadcastAll({ type: 'vote_cast', voteCount: Object.keys(GameState.votes).length });
+    if (activePlayers.every(p => GameState.votes[p.id] !== undefined)) hostResolveVoting();
+  }
+
+  if (GameState.phase === 'lobby') {
+    GameState.players = activePlayers;
+    renderLobbyPlayers();
+    updateLobbyStatus();
+  }
+}
+
+function hostBroadcast(msg, excludePeerId) {
+  Object.entries(_connections).forEach(([pid, conn]) => {
+    if (pid !== excludePeerId) try { conn.send(msg); } catch(e) {}
+  });
+}
+
+function hostBroadcastAll(msg) {
+  Object.values(_connections).forEach(conn => { try { conn.send(msg); } catch(e) {} });
+}
+
+function sanitizePlayers() {
+  return GameState.players.map(p => ({ id: p.id, name: p.name, wins: p.wins || 0, isHost: p.isHost || false }));
+}
+
+function hostStartGame() {
+  if (GameState.players.length < 3) return;
+  GameState.phase = 'game';
+  hostBroadcastAll({ type: 'game_starting' });
+  hostStartRound();
+}
+
+function hostStartRound() {
+  GameState.round++;
+  GameState.clues = {};
+  GameState.votes = {};
+  GameState.selectedVote = null;
+  GameState.phase = 'clue';
+
+  const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+  GameState.wordPair = pickWordPair();
+  GameState.imposterIndex = assignImposterIndex(activePlayers);
+  const imposter = activePlayers[GameState.imposterIndex];
+
+  activePlayers.forEach(player => {
+    const isImposter = player.id === imposter.id;
+    const payload = {
+      type: 'round_start',
+      role: isImposter ? 'imposter' : 'word',
+      value: isImposter ? GameState.wordPair.hint : GameState.wordPair.word,
+      category: GameState.wordPair.category,
+      players: sanitizePlayers(),
+      imposterIndex: GameState.imposterIndex,
+      round: GameState.round,
+    };
+    if (player.id === GameState.localPlayerId) {
+      handleRoundStart(payload);
+    } else {
+      const conn = _connections[player.id];
+      if (conn) try { conn.send(payload); } catch(e) {}
+    }
+  });
+}
+
+function hostTransitionDiscussion() {
+  stopTimer();
+  GameState.phase = 'discussion';
+  const payload = { type: 'phase_change', phase: 'discussion', clues: GameState.clues };
+  hostBroadcastAll(payload);
+  handlePhaseChange(payload);
+}
+
+function hostTransitionVoting() {
+  stopTimer();
+  GameState.phase = 'voting';
+  GameState.votes = {};
+  GameState.selectedVote = null;
+  const payload = { type: 'phase_change', phase: 'voting' };
+  hostBroadcastAll(payload);
+  handlePhaseChange(payload);
+}
+
+function hostResolveVoting() {
+  stopTimer();
+  const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+  const results = calculateResults(GameState.votes, GameState.imposterIndex, activePlayers);
+  const payload = {
+    type: 'reveal',
+    imposterIndex: GameState.imposterIndex,
+    word: GameState.wordPair.word,
+    hint: GameState.wordPair.hint,
+    category: GameState.wordPair.category,
+    results,
+    clues: GameState.clues,
+  };
+  hostBroadcastAll(payload);
+  GameState.phase = 'reveal';
+  handleReveal(payload);
+}
+
+/* ===================== JOINER ===================== */
+function joinerJoinRoom() {
+  const nameInput = document.getElementById('join-name-input');
+  const codeInput = document.getElementById('join-code-input');
+  const name = nameInput.value.trim();
+  const code = codeInput.value.trim().toUpperCase();
+  const errEl = document.getElementById('join-error');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Enter your name.'; return; }
+  if (!code || code.length !== 6) { errEl.textContent = 'Enter a 6-character room code.'; return; }
+
+  multiplayerCleanup();
+  GameState.mode = 'multiplayer';
+
+  showScreen('screen-connecting');
+  document.getElementById('connecting-msg').textContent = 'Connecting to room...';
+
+  _peer = new Peer(undefined, { debug: 0 });
+
+  _peer.on('open', (myId) => {
+    _myPeerId = myId;
+    _isHost = false;
+    GameState.localPlayerId = myId;
+
+    const hostPeerId = 'imposter-' + code;
+    const conn = _peer.connect(hostPeerId, { reliable: true });
+    _hostConn = conn;
+
+    conn.on('open', () => { conn.send({ type: 'join', name }); });
+    conn.on('data', (msg) => joinerHandleMessage(msg, name));
+    conn.on('error', () => showError('Could not connect to room "' + code + '". Check the code and try again.'));
+    conn.on('close', () => { if (GameState.phase && GameState.phase !== 'reveal') showError('Disconnected from host. The game may have ended.'); });
+  });
+
+  _peer.on('error', (err) => showError('Connection error: ' + (err.message || err.type)));
+}
+
+function joinerHandleMessage(msg, myName) {
+  switch (msg.type) {
+    case 'error':
+      showError(msg.message);
+      break;
+    case 'join_ok':
+      GameState.players = msg.players;
+      const me = msg.players.find(p => p.name.toLowerCase() === myName.toLowerCase());
+      if (me) GameState.localPlayerId = me.id;
+      renderLobbyPlayers();
+      updateLobbyStatus();
+      document.getElementById('lobby-start-btn').style.display = 'none';
+      document.getElementById('lobby-wait-msg').style.display = '';
+      document.getElementById('lobby-room-code').textContent = _hostConn.peer.replace('imposter-', '');
+      showScreen('screen-lobby');
+      break;
+    case 'player_joined':
+      GameState.players = msg.players;
+      renderLobbyPlayers();
+      updateLobbyStatus();
+      break;
+    case 'player_left':
+      GameState.players = GameState.players.map(p => p.id === msg.playerId ? { ...p, isConnected: false } : p);
+      renderLobbyPlayers();
+      break;
+    case 'game_starting':
+      break;
+    case 'round_start':
+      GameState.players = msg.players;
+      GameState.round = msg.round;
+      GameState.imposterIndex = msg.imposterIndex;
+      handleRoundStart(msg);
+      break;
+    case 'clue_received':
+      GameState.clues = msg.clues;
+      updateMultiClueList();
+      break;
+    case 'phase_change':
+      handlePhaseChange(msg);
+      break;
+    case 'vote_cast':
+      document.getElementById('voting-count').textContent =
+        `(${msg.voteCount}/${GameState.players.filter(p => p.isConnected !== false).length} voted)`;
+      break;
+    case 'reveal':
+      handleReveal(msg);
+      break;
+    case 'game_aborted':
+      showError(msg.message || 'Game ended unexpectedly.');
+      break;
+  }
+}
+
+/* ===================== SHARED MULTIPLAYER UI ===================== */
+function handleRoundStart(msg) {
+  GameState.phase = 'clue';
+  GameState.clues = {};
+  GameState.votes = {};
+  GameState.selectedVote = null;
+  GameState._myRole = msg.role;
+  GameState._myValue = msg.value;
+
+  // Category tag
+  document.getElementById('clue-category-tag').textContent = msg.category || GameState.wordPair.category;
+
+  const isImposter = msg.role === 'imposter';
+  const wordBox = document.getElementById('clue-word-box');
+  if (isImposter) {
+    wordBox.innerHTML = `Your hint: <strong>${msg.value}</strong> <span style="color:var(--text-muted);font-size:0.78rem">(you are the imposter — blend in!)</span>`;
+  } else {
+    wordBox.innerHTML = `The word: <strong>${msg.value}</strong>`;
+  }
+
+  document.getElementById('clue-previous').innerHTML = '';
+  document.getElementById('clue-turn-msg').textContent = 'Enter your clue when ready:';
+  document.getElementById('clue-input-area').style.display = '';
+  document.getElementById('clue-waiting').style.display = 'none';
+  document.getElementById('clue-input').value = '';
+  document.getElementById('clue-error').textContent = '';
+  showScreen('screen-clue');
+}
+
+function submitClue() {
+  if (GameState.mode === 'pass') {
+    // Pass-device: sequential flow handled here
+    const input = document.getElementById('clue-input');
+    const clue = input.value.trim();
+    const player = GameState.players[GameState.clueIndex];
+    GameState.clues[player.id] = clue || null;
+    GameState.clueIndex++;
+    if (GameState.clueIndex >= GameState.players.length) {
+      showPassDiscussion();
+    } else {
+      showPassClueScreen();
+    }
+    return;
+  }
+
+  // Multiplayer
+  const input = document.getElementById('clue-input');
+  const clue = input.value.trim();
+  const myId = GameState.localPlayerId;
+  if (GameState.clues[myId] !== undefined) return;
+
+  GameState.clues[myId] = clue || null;
+
+  if (_isHost) {
+    hostHandleMessage(myId, { type: 'submit_clue', clue });
+  } else {
+    _hostConn.send({ type: 'submit_clue', clue });
+  }
+
+  document.getElementById('clue-input-area').style.display = 'none';
+  document.getElementById('clue-waiting').style.display = 'flex';
+}
+
+function updateMultiClueList() {
+  // Update clue list while waiting
+  const container = document.getElementById('clue-previous');
+  if (container) {
+    container.innerHTML = '';
+    Object.entries(GameState.clues).forEach(([pid, clue]) => {
+      const p = GameState.players.find(pl => pl.id === pid);
+      if (!p) return;
+      const item = document.createElement('div');
+      item.className = 'clue-item';
+      item.innerHTML = `<span class="clue-name">${p.name}</span><span class="clue-word">${clue || '(passed)'}</span>`;
+      container.appendChild(item);
+    });
+  }
+  if (document.getElementById('screen-discussion').classList.contains('active')) {
+    renderDiscussionClues();
+  }
+}
+
+function handlePhaseChange(msg) {
+  stopTimer();
+  GameState.phase = msg.phase;
+
+  if (msg.phase === 'discussion') {
+    GameState.clues = msg.clues || GameState.clues;
+    renderDiscussionClues();
+    document.getElementById('disc-vote-btn').disabled = false;
+    document.getElementById('disc-vote-btn').textContent = 'Start Voting';
+    const DISC_SECONDS = 180;
+    startTimer(DISC_SECONDS,
+      (r, t) => renderTimerBar('disc-timer-bar', 'disc-timer-text', r, t),
+      () => {
+        if (_isHost) hostTransitionVoting();
+        else if (_hostConn) _hostConn.send({ type: 'start_voting' });
+      }
+    );
+    showScreen('screen-discussion');
+  }
+
+  if (msg.phase === 'voting') {
+    GameState.votes = {};
+    GameState.selectedVote = null;
+    showMultiVotingScreen();
+  }
+}
+
+function goToVoting() {
+  if (GameState.mode === 'pass') {
+    stopTimer();
+    GameState.phase = 'voting';
+    GameState.voteIndex = 0;
+    GameState.votes = {};
+    showPassVotingScreen();
+    return;
+  }
+  if (_isHost) {
+    hostTransitionVoting();
+  } else {
+    _hostConn.send({ type: 'start_voting' });
+    document.getElementById('disc-vote-btn').disabled = true;
+    document.getElementById('disc-vote-btn').textContent = 'Waiting for host...';
+  }
+}
+
+function showMultiVotingScreen() {
+  const myId = GameState.localPlayerId;
+  GameState.selectedVote = null;
+
+  document.getElementById('voting-prompt').textContent = 'Vote for the imposter:';
+  document.getElementById('voting-confirm-btn').disabled = true;
+  document.getElementById('voting-confirm-btn').style.display = '';
+  document.getElementById('voting-skip-btn').style.display = '';
+  document.getElementById('voting-waiting').style.display = 'none';
+  document.getElementById('voting-count').textContent = '';
+
+  const list = document.getElementById('voting-player-list');
+  list.innerHTML = '';
+  const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+  activePlayers.forEach(p => {
+    const isSelf = p.id === myId;
+    const item = document.createElement('div');
+    item.className = 'vote-item' + (isSelf ? ' disabled' : '');
+    item.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:50%;background:${avatarColor(p.name)};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${avatarInitials(p.name)}</div>
+      <span class="vote-item-name">${p.name}</span>
+      <span class="vote-item-check" style="display:none">✓</span>
+    `;
+    if (!isSelf) item.onclick = () => selectVote(p.id, item);
+    list.appendChild(item);
+  });
+
+  showScreen('screen-voting');
+}
+
+function confirmVote() {
+  if (GameState.mode === 'pass') {
+    if (!GameState.selectedVote) return;
+    const voter = GameState.players[GameState.voteIndex];
+    GameState.votes[voter.id] = GameState.selectedVote;
+    GameState.voteIndex++;
+    if (GameState.voteIndex >= GameState.players.length) {
+      const results = calculateResults(GameState.votes, GameState.imposterIndex, GameState.players);
+      showReveal(results);
+    } else {
+      showPassVotingScreen();
+    }
+    return;
+  }
+
+  // Multiplayer
+  if (!GameState.selectedVote) return;
+  const myId = GameState.localPlayerId;
+  if (GameState.votes[myId] !== undefined) return;
+  GameState.votes[myId] = GameState.selectedVote;
+
+  if (_isHost) {
+    hostHandleMessage(myId, { type: 'submit_vote', targetId: GameState.selectedVote });
+  } else {
+    _hostConn.send({ type: 'submit_vote', targetId: GameState.selectedVote });
+  }
+
+  document.getElementById('voting-confirm-btn').style.display = 'none';
+  document.getElementById('voting-skip-btn').style.display = 'none';
+  document.getElementById('voting-waiting').style.display = 'flex';
+}
+
+function skipVote() {
+  if (GameState.mode === 'pass') {
+    const voter = GameState.players[GameState.voteIndex];
+    GameState.votes[voter.id] = null; // abstain
+    GameState.voteIndex++;
+    if (GameState.voteIndex >= GameState.players.length) {
+      const results = calculateResults(GameState.votes, GameState.imposterIndex, GameState.players);
+      showReveal(results);
+    } else {
+      showPassVotingScreen();
+    }
+    return;
+  }
+
+  // Multiplayer
+  const myId = GameState.localPlayerId;
+  if (GameState.votes[myId] !== undefined) return;
+  GameState.votes[myId] = null;
+
+  if (_isHost) {
+    hostHandleMessage(myId, { type: 'submit_vote', targetId: null });
+  } else {
+    _hostConn.send({ type: 'submit_vote', targetId: null });
+  }
+
+  document.getElementById('voting-confirm-btn').style.display = 'none';
+  document.getElementById('voting-skip-btn').style.display = 'none';
+  document.getElementById('voting-waiting').style.display = 'flex';
+}
+
+function handleReveal(msg) {
+  GameState.phase = 'reveal';
+  const activePlayers = GameState.players.filter(p => p.isConnected !== false);
+  const results = msg.results || calculateResults(GameState.votes, GameState.imposterIndex, activePlayers);
+  if (msg.word) GameState.wordPair = { word: msg.word, hint: msg.hint || '', category: msg.category || '' };
+  if (msg.clues) GameState.clues = msg.clues;
+  showReveal(results);
+}
+
+/* ===================== LOBBY UI ===================== */
+function renderLobbyPlayers() {
+  const list = document.getElementById('lobby-player-list');
+  list.innerHTML = '';
+  GameState.players.forEach(p => {
+    if (p.isConnected === false) return;
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    const avatar = document.createElement('div');
+    avatar.className = 'player-avatar';
+    renderPlayerAvatar(avatar, p.name);
+    row.appendChild(avatar);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'player-name';
+    nameEl.textContent = p.name;
+    row.appendChild(nameEl);
+    if (p.isHost) {
+      const badge = document.createElement('div');
+      badge.className = 'player-badge';
+      badge.textContent = 'Host';
+      row.appendChild(badge);
+    }
+    list.appendChild(row);
+  });
+
+  const startBtn = document.getElementById('lobby-start-btn');
+  if (startBtn && _isHost) {
+    const activeCount = GameState.players.filter(p => p.isConnected !== false).length;
+    startBtn.disabled = activeCount < 3;
+  }
+}
+
+function updateLobbyStatus() {
+  const activeCount = GameState.players.filter(p => p.isConnected !== false).length;
+  const statusEl = document.getElementById('lobby-status');
+  statusEl.textContent = activeCount < 3
+    ? `${activeCount} player${activeCount !== 1 ? 's' : ''} — need at least 3 to start`
+    : `${activeCount} players ready`;
+}
+
+function multiplayerPlayAgain() {
+  if (_isHost) {
+    hostStartRound();
+  } else {
+    _hostConn.send({ type: 'next_round' });
+    document.getElementById('reveal-next-btn').disabled = true;
+    document.getElementById('reveal-next-btn').textContent = 'Waiting for host...';
+  }
+}
+
+</script>
+</body>
+</html>
